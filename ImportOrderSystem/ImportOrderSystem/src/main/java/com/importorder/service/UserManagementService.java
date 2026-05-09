@@ -1,6 +1,7 @@
 package com.importorder.service;
 
 import com.importorder.model.User;
+import com.importorder.repository.SiteOrderRepository;
 import com.importorder.repository.UserRepository;
 import com.importorder.util.AppException;
 import com.importorder.util.SessionManager;
@@ -10,7 +11,8 @@ import java.util.List;
 
 public class UserManagementService {
 
-    private final UserRepository userRepo = new UserRepository();
+    private final UserRepository      userRepo      = new UserRepository();
+    private final SiteOrderRepository siteOrderRepo = new SiteOrderRepository();
 
     public User createUser(String username, String fullName, String role,
                            String siteCode, String tempPassword) {
@@ -32,27 +34,46 @@ public class UserManagementService {
         user.setActive(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-
         userRepo.save(user);
         return user;
     }
 
     public void updateUser(String username, String fullName, String role, String siteCode) {
         User user = userRepo.findByUsername(username);
-        if (user == null) throw new AppException("Không tìm thấy user: " + username);
+        if (user == null)
+            throw new AppException("Không tìm thấy user: " + username);
         if ("SITE".equals(role) && (siteCode == null || siteCode.isBlank()))
             throw new AppException("Tài khoản Site phải được liên kết với một site.");
-
         userRepo.updateInfo(username, fullName, role, siteCode);
     }
 
+    /**
+     * Edge Case E1: Cảnh báo nếu khóa tài khoản SITE đang có đơn hàng SENT.
+     * Trả về số đơn đang chờ để UI hiển thị cảnh báo.
+     */
+    public int countPendingSiteOrders(String username) {
+        User user = userRepo.findByUsername(username);
+        if (user == null || !"SITE".equals(user.getRole()) || user.getSiteCode() == null)
+            return 0;
+        return (int) siteOrderRepo.findBySite(user.getSiteCode()).stream()
+            .filter(so -> "SENT".equals(so.getStatus())
+                       || "CONFIRMED".equals(so.getStatus()))
+            .count();
+    }
+
+    /**
+     * Toggle khóa/mở khóa tài khoản.
+     * Nếu là SITE user có đơn SENT → caller phải gọi countPendingSiteOrders
+     * trước và hiển thị cảnh báo; service vẫn cho phép khóa sau khi xác nhận.
+     */
     public void toggleActive(String username) {
         String currentUsername = SessionManager.getUsername();
         if (username.equals(currentUsername))
             throw new AppException("Không thể khóa tài khoản đang sử dụng.");
 
         User user = userRepo.findByUsername(username);
-        if (user == null) throw new AppException("Không tìm thấy user: " + username);
+        if (user == null)
+            throw new AppException("Không tìm thấy user: " + username);
 
         userRepo.setActive(username, !user.isActive());
     }

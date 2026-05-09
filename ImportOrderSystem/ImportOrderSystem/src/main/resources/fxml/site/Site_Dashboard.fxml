@@ -11,36 +11,87 @@
             <Label text="📦 Import Order" styleClass="sidebar-logo"/>
             <Separator style="-fx-background-color: #252A3A;"/>
             <Button text="⬛  Tổng quan" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
-            <Button text="ℹ  Thông tin site" styleClass="nav-item" maxWidth="Infinity" onAction="#goProfile"/>
-            <Button text="📋  Mặt hàng KD" styleClass="nav-item" maxWidth="Infinity" onAction="#goCatalog"/>
-            <Button text="📦  Tồn kho" styleClass="nav-item" maxWidth="Infinity" onAction="#goStock"/>
-            <Button text="🛒  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrders"/>
+            <Button text="🤝  Lời mời liên doanh" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goToInvitation"/>
+            <Button text="ℹ  Thông tin site" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goProfile"/>
+            <Button text="📋  Mặt hàng KD" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goCatalog"/>
+            <Button text="📦  Tồn kho" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goStock"/>
+            <Button text="🛒  Đơn hàng" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goOrders"/>
             <VBox VBox.vgrow="ALWAYS"/>
             <Separator style="-fx-background-color: #252A3A;"/>
             <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
             <Label fx:id="lblSiteCode" styleClass="sidebar-user-role"/>
-            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
-            <Button text="🔑 Đổi mật khẩu" styleClass="btn-ghost" maxWidth="Infinity" onAction="#handleChangePassword" style="-fx-font-size: 12px;"/>
+            <Button text="Đăng xuất" styleClass="btn-logout"
+                    maxWidth="Infinity" onAction="#handleLogout"/>
+            <Button text="🔑 Đổi mật khẩu" styleClass="btn-ghost"
+                    maxWidth="Infinity" onAction="#handleChangePassword"
+                    style="-fx-font-size: 12px;"/>
         </VBox>
     </left>
     <center>
-        <VBox spacing="24" style="-fx-padding: 32;">
+        <VBox spacing="20" style="-fx-padding: 32;">
+
             <Label text="Tổng quan Site"
                    style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+
+            <!-- Banner lời mời liên doanh (ẩn mặc định, hiện nếu có PENDING invite) -->
+            <VBox fx:id="vboxInviteBanner" spacing="10"
+                  style="-fx-background-color: rgba(245,158,11,0.1);
+                         -fx-border-color: rgba(245,158,11,0.4);
+                         -fx-border-radius: 10px; -fx-background-radius: 10px;
+                         -fx-padding: 16;"
+                  visible="false" managed="false">
+                <Label fx:id="lblInviteMsg"
+                       style="-fx-text-fill: #F59E0B; -fx-font-size: 13px;" wrapText="true"/>
+                <Button fx:id="btnGoInvite" text="→ Xem và phản hồi lời mời"
+                        style="-fx-background-color: rgba(245,158,11,0.2);
+                               -fx-text-fill: #F59E0B; -fx-background-radius: 6px;
+                               -fx-border-color: rgba(245,158,11,0.4); -fx-border-radius: 6px;
+                               -fx-cursor: hand; -fx-padding: 8 16;"
+                        onAction="#goToInvitation"/>
+            </VBox>
+
+            <!-- Stats -->
             <HBox spacing="16">
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
                     <Label text="Đơn hàng mới" styleClass="stat-card-label"/>
-                    <Label fx:id="lblNewOrders" text="0" styleClass="stat-card-value" style="-fx-text-fill: #38BDF8;"/>
+                    <Label fx:id="lblNewOrders" text="0" styleClass="stat-card-value"
+                           style="-fx-text-fill: #38BDF8;"/>
                 </VBox>
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
                     <Label text="Chờ xác nhận" styleClass="stat-card-label"/>
-                    <Label fx:id="lblUnconfirmed" text="0" styleClass="stat-card-value" style="-fx-text-fill: #F59E0B;"/>
+                    <Label fx:id="lblUnconfirmed" text="0" styleClass="stat-card-value"
+                           style="-fx-text-fill: #F59E0B;"/>
                 </VBox>
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
                     <Label text="Mặt hàng KD" styleClass="stat-card-label"/>
-                    <Label fx:id="lblCatalogCount" text="0" styleClass="stat-card-value" style="-fx-text-fill: #22C55E;"/>
+                    <Label fx:id="lblCatalogCount" text="0" styleClass="stat-card-value"
+                           style="-fx-text-fill: #22C55E;"/>
                 </VBox>
             </HBox>
+
+            <!-- Quick actions -->
+            <HBox spacing="16">
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12"
+                      style="-fx-cursor: hand;" onMouseClicked="#goOrders">
+                    <Label text="🛒  Xem đơn hàng"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                    <Label text="Xác nhận nhận đơn hoặc gửi yêu cầu hủy"
+                           style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12"
+                      style="-fx-cursor: hand;" onMouseClicked="#goStock">
+                    <Label text="📦  Cập nhật tồn kho"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                    <Label text="Nhập số lượng tồn kho cho batch đang hỏi"
+                           style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                </VBox>
+            </HBox>
+
         </VBox>
     </center>
 </BorderPane>

@@ -23,16 +23,17 @@ import java.util.stream.Collectors;
 
 public class OOD_OrderRequestListController implements Initializable {
 
-    @FXML private Label lblUserName;
-    @FXML private ComboBox<String> cmbStatus;
-    @FXML private TextField txtSearch;
+    @FXML private Label              lblUserName;
+    @FXML private ComboBox<String>   cmbStatus;
+    @FXML private TextField          txtSearch;
     @FXML private TableView<OrderRequest> tblRequests;
     @FXML private TableColumn<OrderRequest, String> colBatchId;
     @FXML private TableColumn<OrderRequest, String> colCreatedBy;
     @FXML private TableColumn<OrderRequest, String> colItems;
-    @FXML private TableColumn<OrderRequest, String> colStatus;
+    @FXML private TableColumn<OrderRequest, String> colStatus;      // displayStatus
+    @FXML private TableColumn<OrderRequest, String> colSubBatches;  // ← thêm: số lần xử lý
     @FXML private TableColumn<OrderRequest, String> colCreatedAt;
-    @FXML private TableColumn<OrderRequest, Void> colActions;
+    @FXML private TableColumn<OrderRequest, Void>   colActions;
     @FXML private Label lblPageInfo;
 
     private PaginationHelper<OrderRequest> pagination;
@@ -51,35 +52,64 @@ public class OOD_OrderRequestListController implements Initializable {
     }
 
     private void setupTable() {
-        colBatchId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getBatchId()));
-        colCreatedBy.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCreatedBy()));
-        colItems.setCellValueFactory(c -> new SimpleStringProperty(
-            c.getValue().getItems() != null ? c.getValue().getItems().size() + " mặt hàng" : "0"));
-        colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus()));
+        colBatchId.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getBatchId()));
+        colCreatedBy.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getCreatedBy()));
+        colItems.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getItems() != null
+                ? c.getValue().getItems().size() + " mặt hàng" : "0"));
+
+        // Dùng displayStatus (= status sub-batch mới nhất) thay vì status gốc
+        colStatus.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getDisplayStatus()));
+
+        // Số lần xử lý (sub-batches)
+        if (colSubBatches != null) {
+            colSubBatches.setCellValueFactory(c -> {
+                int count = c.getValue().getSubBatches() != null
+                    ? c.getValue().getSubBatches().size() : 0;
+                return new SimpleStringProperty(
+                    count == 0 ? "--"
+                    : count + " lần" + (count > 1 ? " (có thay thế)" : ""));
+            });
+        }
+
         colCreatedAt.setCellValueFactory(c ->
             new SimpleStringProperty(DateUtils.formatDateTime(c.getValue().getCreatedAt())));
 
         colActions.setCellFactory(col -> new TableCell<>() {
-            final Button btnView    = new Button("Xem");
+            final Button btnDetail  = new Button("Lịch sử");  // ← xem batch detail
             final Button btnProcess = new Button("Xử lý");
-            final HBox   box        = new HBox(6, btnView, btnProcess);
+            final HBox   box        = new HBox(6, btnDetail, btnProcess);
             {
-                btnView.setStyle("-fx-background-color: rgba(79,110,247,0.15); -fx-text-fill: #4F6EF7; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
-                btnProcess.setStyle("-fx-background-color: rgba(34,197,94,0.15); -fx-text-fill: #22C55E; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btnDetail.setStyle(
+                    "-fx-background-color: rgba(79,110,247,0.15); -fx-text-fill: #4F6EF7; " +
+                    "-fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btnProcess.setStyle(
+                    "-fx-background-color: rgba(34,197,94,0.15); -fx-text-fill: #22C55E; " +
+                    "-fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+
+                btnDetail.setOnAction(e -> {
+                    OrderRequest r = getTableView().getItems().get(getIndex());
+                    goToBatchDetail(r.getBatchId());
+                });
                 btnProcess.setOnAction(e -> {
                     OrderRequest r = getTableView().getItems().get(getIndex());
                     goToProcess(r);
                 });
             }
+
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) { setGraphic(null); return; }
                 OrderRequest r = getTableView().getItems().get(getIndex());
-                boolean canProcess = "PENDING".equals(r.getStatus()) || "PROCESSING".equals(r.getStatus());
+                String ds = r.getDisplayStatus();
+                boolean canProcess = "PENDING".equals(ds) || "PROCESSING".equals(ds);
                 btnProcess.setVisible(canProcess);
                 btnProcess.setManaged(canProcess);
-                btnProcess.setText("PROCESSING".equals(r.getStatus()) ? "Tiếp tục →" : "Xử lý");
+                btnProcess.setText("PROCESSING".equals(ds) ? "Tiếp tục →" : "Xử lý");
                 setGraphic(box);
             }
         });
@@ -90,23 +120,39 @@ public class OOD_OrderRequestListController implements Initializable {
         applyFilter();
     }
 
-    @FXML
-    private void handleFilter() {
-        applyFilter();
-    }
+    @FXML private void handleFilter() { applyFilter(); }
 
     private void applyFilter() {
         String status = cmbStatus.getValue();
         String search = txtSearch.getText().toLowerCase().trim();
 
         List<OrderRequest> filtered = allRequests.stream()
-            .filter(r -> "Tất cả".equals(status) || status.equals(r.getStatus()))
+            .filter(r -> "Tất cả".equals(status)
+                || status.equals(r.getDisplayStatus()))
             .filter(r -> search.isEmpty()
                 || r.getBatchId().toLowerCase().contains(search)
-                || (r.getCreatedBy() != null && r.getCreatedBy().toLowerCase().contains(search)))
+                || (r.getCreatedBy() != null
+                    && r.getCreatedBy().toLowerCase().contains(search)))
             .collect(Collectors.toList());
 
         pagination.setItems(filtered);
+    }
+
+    /** Xem lịch sử batch lớn (tất cả sub-batches + đơn hàng) */
+    private void goToBatchDetail(String batchId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/ood/OOD_BatchDetail.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            OOD_BatchDetailController ctrl = loader.getController();
+            ctrl.setBatchId(batchId);
+            Stage stage = (Stage) tblRequests.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
     }
 
     private void goToProcess(OrderRequest r) {
@@ -114,7 +160,8 @@ public class OOD_OrderRequestListController implements Initializable {
             FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/fxml/ood/OOD_SupplyDashboard.fxml"));
             Scene scene = new Scene(loader.load(), 1280, 720);
-            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
             OOD_SupplyDashboardController ctrl = loader.getController();
             ctrl.setBatchId(r.getBatchId());
             Stage stage = (Stage) tblRequests.getScene().getWindow();
@@ -124,11 +171,8 @@ public class OOD_OrderRequestListController implements Initializable {
         }
     }
 
-    // ── Pagination ────────────────────────────────────────────────────────────
-    @FXML private void handlePrevPage() { pagination.prevPage(); }
-    @FXML private void handleNextPage() { pagination.nextPage(); }
-
-    // ── Navigation ────────────────────────────────────────────────────────────
+    @FXML private void handlePrevPage()   { pagination.prevPage(); }
+    @FXML private void handleNextPage()   { pagination.nextPage(); }
     @FXML private void goDashboard()      { navigateTo("/fxml/ood/OOD_Dashboard.fxml"); }
     @FXML private void goSiteOrders()     { navigateTo("/fxml/ood/OOD_SiteOrderList.fxml"); }
     @FXML private void goCancelRequests() { navigateTo("/fxml/ood/OOD_CancelRequestList.fxml"); }
@@ -139,7 +183,8 @@ public class OOD_OrderRequestListController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
             Scene scene = new Scene(loader.load(), 1280, 720);
-            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
             Stage stage = (Stage) tblRequests.getScene().getWindow();
             stage.setScene(scene);
         } catch (Exception e) {

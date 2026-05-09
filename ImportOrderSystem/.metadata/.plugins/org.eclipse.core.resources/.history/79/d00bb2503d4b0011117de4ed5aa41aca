@@ -1,0 +1,5 @@
+package com.importorder.model;
+
+public class SiteInvitation {
+
+}

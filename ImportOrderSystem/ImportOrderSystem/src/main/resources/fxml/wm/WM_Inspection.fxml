@@ -21,32 +21,50 @@
         </VBox>
     </left>
     <center>
-        <SplitPane dividerPositions="0.4" style="-fx-background-color: #0D0F14; -fx-padding: 32;">
-            <!-- LEFT: danh sách đơn chờ kiểm -->
+        <SplitPane dividerPositions="0.35"
+                   style="-fx-background-color: #0D0F14; -fx-padding: 32;">
+
+            <!-- LEFT: danh sách đơn chờ kiểm (SENT / PARTIALLY_RECEIVED) -->
             <VBox spacing="12">
                 <Label text="Đơn chờ kiểm hàng"
                        style="-fx-text-fill: #E8ECF5; -fx-font-size: 16px; -fx-font-weight: 700;"/>
+                <Label text="Chỉ hiển thị đơn SENT / PARTIALLY_RECEIVED"
+                       style="-fx-text-fill: #4A5368; -fx-font-size: 11px;"/>
                 <ListView fx:id="lstSiteOrders" VBox.vgrow="ALWAYS"
                           style="-fx-background-color: #13161E; -fx-border-color: #252A3A;
                                  -fx-border-radius: 10px; -fx-background-radius: 10px;"/>
             </VBox>
+
             <!-- RIGHT: chi tiết kiểm hàng -->
             <VBox spacing="16">
-                <Label fx:id="lblSelectedOrder" text="Chọn đơn hàng từ danh sách bên trái"
+                <Label fx:id="lblSelectedOrder"
+                       text="Chọn đơn hàng từ danh sách bên trái"
                        style="-fx-text-fill: #8892A8; -fx-font-size: 13px;"/>
+
+                <!-- Edge Case D3: cảnh báo đơn bị hủy -->
+                <Label fx:id="lblCancelledWarning"
+                       style="-fx-text-fill: #EF4444; -fx-font-size: 12px;
+                              -fx-background-color: rgba(239,68,68,0.08);
+                              -fx-background-radius: 8px; -fx-padding: 10 14;"
+                       wrapText="true" visible="false" managed="false"/>
+
                 <TableView fx:id="tblInspection" styleClass="table-view" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colCode" text="MÃ HÀNG" prefWidth="100"/>
-                        <TableColumn fx:id="colExpected" text="ĐẶT" prefWidth="70"/>
-                        <TableColumn fx:id="colUnit" text="ĐVT" prefWidth="70"/>
-                        <TableColumn fx:id="colActual" text="THỰC NHẬN" prefWidth="100"/>
-                        <TableColumn fx:id="colActualCode" text="MÃ THỰC NHẬN" prefWidth="130"/>
-                        <TableColumn fx:id="colNote" text="GHI CHÚ" prefWidth="180"/>
+                        <TableColumn fx:id="colCode"       text="MÃ HÀNG"       prefWidth="100"/>
+                        <TableColumn fx:id="colExpected"   text="ĐẶT"            prefWidth="70"/>
+                        <TableColumn fx:id="colUnit"       text="ĐVT"            prefWidth="70"/>
+                        <!-- Edge Case D4: actualQty = 0 phải có ghi chú -->
+                        <TableColumn fx:id="colActual"     text="THỰC NHẬN *"    prefWidth="110"/>
+                        <TableColumn fx:id="colActualCode" text="MÃ THỰC NHẬN"  prefWidth="130"/>
+                        <TableColumn fx:id="colNote"       text="GHI CHÚ (bắt buộc khi = 0)"
+                                     prefWidth="200"/>
                     </columns>
                     <placeholder>
-                        <Label text="Chọn đơn để kiểm hàng" style="-fx-text-fill: #4A5368;"/>
+                        <Label text="Chọn đơn để kiểm hàng"
+                               style="-fx-text-fill: #4A5368;"/>
                     </placeholder>
                 </TableView>
+
                 <HBox spacing="12" alignment="CENTER_RIGHT">
                     <Button fx:id="btnConfirm" text="✓ Xác nhận kiểm hàng"
                             styleClass="btn-primary" onAction="#handleConfirm"

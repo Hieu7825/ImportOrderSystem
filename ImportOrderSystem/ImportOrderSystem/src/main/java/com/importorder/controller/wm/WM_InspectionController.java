@@ -26,6 +26,7 @@ public class WM_InspectionController implements Initializable {
     @FXML private Label lblUserName;
     @FXML private ListView<SiteOrder> lstSiteOrders;
     @FXML private Label lblSelectedOrder;
+    @FXML private Label lblCancelledWarning;   // ← thêm: cảnh báo đơn đã hủy (D3)
     @FXML private TableView<FinalOrder> tblInspection;
     @FXML private TableColumn<FinalOrder, String> colCode;
     @FXML private TableColumn<FinalOrder, String> colExpected;
@@ -35,21 +36,25 @@ public class WM_InspectionController implements Initializable {
     @FXML private TableColumn<FinalOrder, String> colNote;
     @FXML private Button btnConfirm;
 
-    private final SiteOrderService siteOrderService = new SiteOrderService();
-    private final WarehouseService warehouseService = new WarehouseService();
+    private final SiteOrderService  siteOrderService  = new SiteOrderService();
+    private final WarehouseService  warehouseService  = new WarehouseService();
 
-    // Map itemCode -> { actualQty, actualUnit, itemCodeReceived, description }
     private final Map<String, Map<String, Object>> inspectionData = new HashMap<>();
     private SiteOrder selectedOrder;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         lblUserName.setText(SessionManager.getCurrentUser().getFullName());
+        if (lblCancelledWarning != null) {
+            lblCancelledWarning.setVisible(false);
+            lblCancelledWarning.setManaged(false);
+        }
         setupList();
         setupTable();
     }
 
     private void setupList() {
+        // Chỉ load đơn SENT / PARTIALLY_RECEIVED — KHÔNG bao gồm CANCELLED (D3)
         var pending = warehouseService.getPendingInspection();
         lstSiteOrders.setItems(FXCollections.observableArrayList(pending));
         lstSiteOrders.setCellFactory(lv -> new ListCell<>() {
@@ -57,24 +62,26 @@ public class WM_InspectionController implements Initializable {
             protected void updateItem(SiteOrder so, boolean empty) {
                 super.updateItem(so, empty);
                 if (empty || so == null) { setText(null); return; }
-                setText(so.getSiteOrderId() + "\n" + so.getSiteCode()
-                    + " | " + so.getDeliveryMeans() + " | " + so.getStatus());
+                setText(so.getSiteOrderId() + "\n"
+                    + so.getSiteCode() + " | " + so.getDeliveryMeans()
+                    + " | " + so.getStatus());
                 setStyle("-fx-text-fill: #E8ECF5; -fx-font-size: 12px; -fx-padding: 8;");
             }
         });
-        lstSiteOrders.getSelectionModel().selectedItemProperty().addListener(
-            (obs, old, sel) -> {
+        lstSiteOrders.getSelectionModel().selectedItemProperty()
+            .addListener((obs, old, sel) -> {
                 if (sel != null) loadInspectionTable(sel);
             });
     }
 
     private void setupTable() {
-        colCode.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getItemCode()));
+        colCode.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getItemCode()));
         colExpected.setCellValueFactory(c ->
             new SimpleStringProperty(String.valueOf(c.getValue().getQuantityOrdered())));
-        colUnit.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getUnit()));
+        colUnit.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getUnit()));
 
-        // Editable columns
         colActual.setCellValueFactory(c -> {
             Map<String, Object> d = inspectionData.computeIfAbsent(
                 c.getValue().getItemCode(), k -> new HashMap<>());
@@ -101,20 +108,43 @@ public class WM_InspectionController implements Initializable {
     }
 
     private void loadInspectionTable(SiteOrder so) {
+        // Edge Case D3: đơn đã bị hủy → hiển thị cảnh báo, không cho xác nhận
+        if ("CANCELLED".equals(so.getStatus())) {
+            selectedOrder = null;
+            tblInspection.getItems().clear();
+            inspectionData.clear();
+            btnConfirm.setDisable(true);
+            lblSelectedOrder.setText("⚠ Đơn " + so.getSiteOrderId() + " đã bị HỦY");
+
+            if (lblCancelledWarning != null) {
+                lblCancelledWarning.setText(
+                    "Đơn hàng này đã bị hủy trước khi hàng về. Nếu hàng vẫn đến kho, "
+                    + "vui lòng báo cáo thủ công cho OOD/SITE để phối hợp xử lý trả hàng.");
+                lblCancelledWarning.setVisible(true);
+                lblCancelledWarning.setManaged(true);
+            }
+            return;
+        }
+
+        // Đơn hợp lệ → ẩn cảnh báo
+        if (lblCancelledWarning != null) {
+            lblCancelledWarning.setVisible(false);
+            lblCancelledWarning.setManaged(false);
+        }
+
         selectedOrder = so;
         inspectionData.clear();
         lblSelectedOrder.setText("Đơn: " + so.getSiteOrderId()
             + " | Site: " + so.getSiteCode()
             + " | " + so.getDeliveryMeans());
-        List<FinalOrder> items = siteOrderService.getItemsOfSiteOrder(so.getSiteOrderId());
 
-        // Khởi tạo inspectionData với default values
+        List<FinalOrder> items = siteOrderService.getItemsOfSiteOrder(so.getSiteOrderId());
         for (FinalOrder fo : items) {
             Map<String, Object> d = new HashMap<>();
-            d.put("actualQty", fo.getQuantityOrdered());
-            d.put("actualUnit", fo.getUnit());
+            d.put("actualQty",        fo.getQuantityOrdered());
+            d.put("actualUnit",       fo.getUnit());
             d.put("itemCodeReceived", fo.getItemCode());
-            d.put("description", "");
+            d.put("description",      "");
             inspectionData.put(fo.getItemCode(), d);
         }
 
@@ -125,8 +155,26 @@ public class WM_InspectionController implements Initializable {
     @FXML
     private void handleConfirm() {
         if (selectedOrder == null) return;
+
+        // Edge Case D4: kiểm tra qty = 0 phải có ghi chú
+        for (Map.Entry<String, Map<String, Object>> entry : inspectionData.entrySet()) {
+            Object qtyObj = entry.getValue().get("actualQty");
+            int qty = 0;
+            if (qtyObj instanceof Integer) qty = (Integer) qtyObj;
+            else if (qtyObj instanceof String s) {
+                try { qty = Integer.parseInt(s.trim()); } catch (Exception ignored) {}
+            }
+            String desc = (String) entry.getValue().getOrDefault("description", "");
+            if (qty == 0 && (desc == null || desc.isBlank())) {
+                AlertUtils.showError("Thiếu thông tin",
+                    "Mặt hàng '" + entry.getKey()
+                    + "': số lượng thực nhận = 0 nhưng chưa có ghi chú.\n"
+                    + "Vui lòng điền lý do vào cột Ghi chú.");
+                return;
+            }
+        }
+
         try {
-            // Convert actualQty strings to integers
             Map<String, Map<String, Object>> converted = new HashMap<>();
             for (var entry : inspectionData.entrySet()) {
                 Map<String, Object> d = new HashMap<>(entry.getValue());
@@ -141,7 +189,6 @@ public class WM_InspectionController implements Initializable {
             warehouseService.submitInspection(selectedOrder.getSiteOrderId(), converted);
             AlertUtils.showInfo("Thành công", "Kiểm hàng hoàn tất!");
 
-            // Reload
             setupList();
             tblInspection.getItems().clear();
             lblSelectedOrder.setText("Chọn đơn hàng từ danh sách bên trái");
@@ -152,19 +199,22 @@ public class WM_InspectionController implements Initializable {
         }
     }
 
-    // Inner class for editable cells
+    // ── Inner class: Editable cell ────────────────────────────────────────────
+
     private class EditableCell extends TableCell<FinalOrder, String> {
         private final TextField textField = new TextField();
-        private final String fieldKey;
+        private final String    fieldKey;
 
         EditableCell(String fieldKey) {
             this.fieldKey = fieldKey;
-            textField.setStyle("-fx-background-color: #1C2030; -fx-text-fill: #E8ECF5; " +
+            textField.setStyle(
+                "-fx-background-color: #1C2030; -fx-text-fill: #E8ECF5; " +
                 "-fx-border-color: #252A3A; -fx-border-radius: 4px;");
             textField.textProperty().addListener((obs, old, val) -> {
                 FinalOrder fo = getTableRow().getItem();
                 if (fo != null) {
-                    inspectionData.computeIfAbsent(fo.getItemCode(), k -> new HashMap<>())
+                    inspectionData
+                        .computeIfAbsent(fo.getItemCode(), k -> new HashMap<>())
                         .put(fieldKey, val);
                 }
             });
@@ -186,13 +236,17 @@ public class WM_InspectionController implements Initializable {
 
     @FXML private void goDashboard() { navigateTo("/fxml/wm/WM_Dashboard.fxml"); }
     @FXML private void goOrderList() { navigateTo("/fxml/wm/WM_OrderList.fxml"); }
-    @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
+    @FXML private void handleLogout() {
+        SessionManager.logout();
+        navigateTo("/fxml/Login.fxml");
+    }
 
     private void navigateTo(String path) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
             Scene scene = new Scene(loader.load(), 1280, 720);
-            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
             Stage stage = (Stage) lblUserName.getScene().getWindow();
             stage.setScene(scene);
         } catch (Exception e) {

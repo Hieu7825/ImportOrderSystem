@@ -35,7 +35,7 @@ public class Admin_UserListController implements Initializable {
     @FXML private TableColumn<User, String> colSiteCode;
     @FXML private TableColumn<User, String> colStatus;
     @FXML private TableColumn<User, String> colCreatedAt;
-    @FXML private TableColumn<User, Void> colActions;
+    @FXML private TableColumn<User, Void>   colActions;
     @FXML private Label lblPageInfo;
 
     private PaginationHelper<User> pagination;
@@ -65,19 +65,16 @@ public class Admin_UserListController implements Initializable {
         colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         colFullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
-
         colSiteCode.setCellValueFactory(c ->
             new SimpleStringProperty(c.getValue().getSiteCode() != null
                 ? c.getValue().getSiteCode() : "--"));
-
         colStatus.setCellValueFactory(c ->
-            new SimpleStringProperty(c.getValue().isActive() ? "✅ Hoạt động" : "🔒 Bị khóa"));
-
+            new SimpleStringProperty(c.getValue().isActive()
+                ? "✅ Hoạt động" : "🔒 Bị khóa"));
         colCreatedAt.setCellValueFactory(c ->
             new SimpleStringProperty(c.getValue().getCreatedAt() != null
                 ? DateUtils.formatDateTime(c.getValue().getCreatedAt()) : "--"));
 
-        // Action buttons column
         colActions.setCellFactory(col -> new TableCell<>() {
             final Button btnEdit   = new Button("Sửa");
             final Button btnToggle = new Button();
@@ -102,16 +99,10 @@ public class Admin_UserListController implements Initializable {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                    return;
-                }
+                if (empty) { setGraphic(null); return; }
 
                 User u = getTableView().getItems().get(getIndex());
-                String currentUsername = SessionManager.getUsername();
-
-                // Không cho sửa/khóa chính mình
-                if (u.getUsername().equals(currentUsername)) {
+                if (u.getUsername().equals(SessionManager.getUsername())) {
                     setGraphic(null);
                     return;
                 }
@@ -137,10 +128,7 @@ public class Admin_UserListController implements Initializable {
         applyFilter();
     }
 
-    @FXML
-    private void handleSearch() {
-        applyFilter();
-    }
+    @FXML private void handleSearch() { applyFilter(); }
 
     private void applyFilter() {
         String search = txtSearch.getText().toLowerCase().trim();
@@ -150,7 +138,8 @@ public class Admin_UserListController implements Initializable {
         List<User> filtered = allUsers.stream()
             .filter(u -> search.isEmpty()
                 || u.getUsername().toLowerCase().contains(search)
-                || (u.getFullName() != null && u.getFullName().toLowerCase().contains(search)))
+                || (u.getFullName() != null
+                    && u.getFullName().toLowerCase().contains(search)))
             .filter(u -> "Tất cả".equals(role) || role.equals(u.getRole()))
             .filter(u -> {
                 if ("Đang hoạt động".equals(status)) return u.isActive();
@@ -162,8 +151,7 @@ public class Admin_UserListController implements Initializable {
         pagination.setItems(filtered);
     }
 
-    @FXML
-    private void handleCreate() {
+    @FXML private void handleCreate() {
         navigateTo("/fxml/admin/Admin_UserForm.fxml");
     }
 
@@ -184,9 +172,25 @@ public class Admin_UserListController implements Initializable {
     }
 
     private void handleToggleActive(User user) {
+        // Edge Case E1: cảnh báo nếu là SITE user đang có đơn SENT
+        if (user.isActive() && "SITE".equals(user.getRole())) {
+            int pendingOrders = userService.countPendingSiteOrders(user.getUsername());
+            if (pendingOrders > 0) {
+                boolean confirm = AlertUtils.showConfirm(
+                    "⚠ Cảnh báo",
+                    "Tài khoản site '" + user.getUsername() + "' hiện có "
+                    + pendingOrders + " đơn hàng đang chờ xác nhận (SENT/CONFIRMED).\n\n"
+                    + "Khóa tài khoản sẽ khiến site không thể xác nhận hoặc gửi yêu cầu hủy. "
+                    + "Đơn hàng sẽ bị treo cho đến khi mở khóa lại.\n\n"
+                    + "Bạn có chắc muốn khóa không?");
+                if (!confirm) return;
+            }
+        }
+
         String action  = user.isActive() ? "khóa" : "mở khóa";
         boolean confirm = AlertUtils.showConfirm("Xác nhận",
-            "Bạn có chắc muốn " + action + " tài khoản '" + user.getUsername() + "'?");
+            "Bạn có chắc muốn " + action
+            + " tài khoản '" + user.getUsername() + "'?");
         if (confirm) {
             try {
                 userService.toggleActive(user.getUsername());
@@ -197,15 +201,11 @@ public class Admin_UserListController implements Initializable {
         }
     }
 
-    // ── Pagination ────────────────────────────────────────────────────────────
     @FXML private void handlePrevPage() { pagination.prevPage(); }
     @FXML private void handleNextPage() { pagination.nextPage(); }
+    @FXML private void goDashboard()    { navigateTo("/fxml/admin/Admin_Dashboard.fxml"); }
 
-    // ── Navigation ────────────────────────────────────────────────────────────
-    @FXML private void goDashboard() { navigateTo("/fxml/admin/Admin_Dashboard.fxml"); }
-
-    @FXML
-    private void handleLogout() {
+    @FXML private void handleLogout() {
         SessionManager.logout();
         navigateTo("/fxml/Login.fxml");
     }

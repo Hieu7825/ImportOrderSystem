@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.ood.OOD_SiteInviteFormController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderRequests"/>
+            <Button text="📦  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goSiteOrders"/>
+            <Button text="⚠  Yêu cầu hủy" styleClass="nav-item" maxWidth="Infinity" onAction="#goCancelRequests"/>
+            <Button text="🏭  Quản lý Site" styleClass="nav-item, nav-item-active" maxWidth="Infinity" onAction="#goSites"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ĐẶT HÀNG QUỐC TẾ" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="24" style="-fx-padding: 32;" maxWidth="640">
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Button text="← Quay lại" styleClass="btn-ghost" onAction="#handleCancel"/>
+                <Label text="Gửi lời mời liên doanh"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
+            </HBox>
+
+            <!-- Hướng dẫn -->
+            <VBox style="-fx-background-color: rgba(79,110,247,0.08);
+                         -fx-border-color: rgba(79,110,247,0.3);
+                         -fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 12;"
+                  spacing="6">
+                <Label text="ℹ Quy trình liên doanh:"
+                       style="-fx-text-fill: #4F6EF7; -fx-font-size: 13px; -fx-font-weight: 600;"/>
+                <Label text="1. OOD nhập thông tin cơ bản → Gửi lời mời"
+                       style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                <Label text="2. Admin tạo tài khoản SITE với mã site tương ứng"
+                       style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                <Label text="3. SITE đăng nhập → Điền thông tin vận chuyển &amp; catalog → Chấp nhận"
+                       style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                <Label text="4. Site xuất hiện trong danh sách khả dụng để sinh đơn"
+                       style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+            </VBox>
+
+            <!-- Form -->
+            <VBox styleClass="stat-card" spacing="20">
+
+                <VBox spacing="6">
+                    <Label text="MÃ SITE *" styleClass="form-label"/>
+                    <TextField fx:id="txtSiteCode" promptText="VD: S07, JP-OSAKA..."
+                               styleClass="text-field"/>
+                    <Label text="Mã site phải là duy nhất trong hệ thống"
+                           style="-fx-text-fill: #4A5368; -fx-font-size: 11px;"/>
+                    <Label fx:id="lblSiteCodeErr" styleClass="form-error"
+                           visible="false" managed="false"/>
+                </VBox>
+
+                <VBox spacing="6">
+                    <Label text="TÊN SITE *" styleClass="form-label"/>
+                    <TextField fx:id="txtSiteName" promptText="VD: Osaka Electronics Ltd."
+                               styleClass="text-field"/>
+                    <Label fx:id="lblSiteNameErr" styleClass="form-error"
+                           visible="false" managed="false"/>
+                </VBox>
+
+                <VBox spacing="6">
+                    <Label text="QUỐC GIA" styleClass="form-label"/>
+                    <TextField fx:id="txtCountry" promptText="VD: Japan"
+                               styleClass="text-field"/>
+                </VBox>
+
+                <Label text="* Thông tin vận chuyển (số ngày ship/air) và catalog mặt hàng
+sẽ do SITE tự điền khi chấp nhận lời mời."
+                       style="-fx-text-fill: #4A5368; -fx-font-size: 11px;" wrapText="true"/>
+
+                <Label fx:id="lblError" styleClass="form-error" wrapText="true"
+                       visible="false" managed="false"
+                       style="-fx-background-color: rgba(239,68,68,0.1);
+                              -fx-background-radius: 6px; -fx-padding: 8 12;"/>
+
+                <HBox spacing="12" alignment="CENTER_RIGHT">
+                    <Button text="Hủy" styleClass="btn-ghost" onAction="#handleCancel"/>
+                    <Button text="📨 Gửi lời mời liên doanh"
+                            styleClass="btn-primary" onAction="#handleSend"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

@@ -14,20 +14,18 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class OOD_OrderGenerationController implements Initializable {
 
-    @FXML private Label lblUserName;
-    @FXML private Label lblBatchId;
-    @FXML private Label lblPlanIndex;
-    @FXML private Label lblPlanLabel;        // ← label tên chiến lược
-    @FXML private VBox  vboxWarning;
-    @FXML private Label lblInsufficientItems;
+    @FXML private Label  lblUserName;
+    @FXML private Label  lblBatchId;
+    @FXML private Label  lblSubBatchInfo;   // ← thêm: hiện thông tin sub-batch
+    @FXML private Label  lblPlanIndex;
+    @FXML private Label  lblPlanLabel;
+    @FXML private VBox   vboxWarning;
+    @FXML private Label  lblInsufficientItems;
     @FXML private TableView<Map<String, Object>> tblSiteOrders;
     @FXML private TableColumn<Map<String, Object>, String> colSite;
     @FXML private TableColumn<Map<String, Object>, String> colMeans;
@@ -37,8 +35,9 @@ public class OOD_OrderGenerationController implements Initializable {
 
     private final OrderOptimizationService optimService = new OrderOptimizationService();
     private String       batchId;
-    private List<String> prioritized  = new ArrayList<>();
-    private List<String> avoided      = new ArrayList<>();
+    private String       subBatchId;   // null = ORIGINAL
+    private List<String> prioritized   = new ArrayList<>();
+    private List<String> avoided       = new ArrayList<>();
     private List<Map<String, Object>> allPlans = new ArrayList<>();
     private int currentPlanIndex = 0;
 
@@ -49,17 +48,42 @@ public class OOD_OrderGenerationController implements Initializable {
         setupTable();
     }
 
+    /** Gọi từ SupplyDashboard (ORIGINAL) */
     public void setBatchData(String batchId, List<String> prioritized, List<String> avoided) {
-        this.batchId     = batchId;
+        setBatchData(batchId, null, prioritized, avoided);
+    }
+
+    /** Gọi từ SupplyDashboard (REPLACEMENT) */
+    public void setBatchData(String batchId, String subBatchId,
+                              List<String> prioritized, List<String> avoided) {
+        this.batchId    = batchId;
+        this.subBatchId = subBatchId;
         this.prioritized = prioritized;
         this.avoided     = avoided;
+
         if (lblBatchId != null) lblBatchId.setText("Batch: " + batchId);
+        if (lblSubBatchInfo != null) {
+            if (subBatchId != null) {
+                lblSubBatchInfo.setText("🔄 Phương án thay thế — " + subBatchId);
+                lblSubBatchInfo.setVisible(true);
+                lblSubBatchInfo.setManaged(true);
+            } else {
+                lblSubBatchInfo.setVisible(false);
+                lblSubBatchInfo.setManaged(false);
+            }
+        }
         calculatePlans();
     }
 
     private void calculatePlans() {
         try {
-            allPlans = optimService.generateAllPlans(batchId, prioritized, avoided);
+            if (subBatchId != null) {
+                allPlans = optimService.generateAllPlansForSubBatch(
+                    batchId, subBatchId, prioritized, avoided);
+            } else {
+                allPlans = optimService.generateAllPlans(batchId, prioritized, avoided);
+            }
+
             if (allPlans.isEmpty()) {
                 AlertUtils.showError("Lỗi",
                     "Không thể tính phương án nào. Kiểm tra lại tồn kho và deadline.");
@@ -99,29 +123,34 @@ public class OOD_OrderGenerationController implements Initializable {
         Map<String, Object> plan  = allPlans.get(index);
         int                 total = allPlans.size();
 
-        // Số phương án + số site
         lblPlanIndex.setText("Phương án " + (index + 1) + " / " + total
-            + "   |   Số site sử dụng: " + plan.get("totalSites"));
+            + "   |   Số site: " + plan.get("totalSites"));
 
-        // Tên chiến lược
         String label = (String) plan.get("label");
         if (lblPlanLabel != null)
             lblPlanLabel.setText(label != null ? "💡 " + label : "");
 
-        // Site orders
         List<Map<String, Object>> siteOrders =
             (List<Map<String, Object>>) plan.get("siteOrders");
         tblSiteOrders.setItems(FXCollections.observableArrayList(
             siteOrders != null ? siteOrders : new ArrayList<>()));
 
-        // Insufficient items warning
+        // Insufficient items warning — Edge Case B3: bổ sung thông tin về avoided site
         List<Map<String, Object>> insufficient =
             (List<Map<String, Object>>) plan.get("insufficientItems");
         if (insufficient != null && !insufficient.isEmpty()) {
             vboxWarning.setVisible(true);
             vboxWarning.setManaged(true);
             String text = insufficient.stream()
-                .map(i -> "• " + i.get("itemCode") + ": " + i.get("reason"))
+                .map(i -> {
+                    String line = "• " + i.get("itemCode") + ": " + i.get("reason");
+                    // Edge Case B3: thêm cảnh báo site avoided
+                    if ("ONLY_AVOIDED_SITES_AVAILABLE".equals(i.get("reason"))) {
+                        line += " (Site bị đánh ✕ là nguồn duy nhất: "
+                            + i.get("avoidedSites") + ")";
+                    }
+                    return line;
+                })
                 .collect(Collectors.joining("\n"));
             lblInsufficientItems.setText(text);
         } else {
@@ -150,23 +179,30 @@ public class OOD_OrderGenerationController implements Initializable {
     private void handleConfirm() {
         if (allPlans.isEmpty()) return;
         Map<String, Object> selectedPlan = allPlans.get(currentPlanIndex);
-        String planName = (String) selectedPlan.getOrDefault("label", "Phương án " + (currentPlanIndex + 1));
+        String planName = (String) selectedPlan.getOrDefault(
+            "label", "Phương án " + (currentPlanIndex + 1));
 
         boolean confirm = AlertUtils.showConfirm("Xác nhận sinh đơn",
             "Xác nhận sinh đơn hàng theo:\n\"" + planName + "\"?");
         if (!confirm) return;
 
         try {
-            optimService.confirmPlan(batchId, selectedPlan);
+            if (subBatchId != null) {
+                optimService.confirmPlanForSubBatch(batchId, subBatchId, selectedPlan);
+            } else {
+                optimService.confirmPlan(batchId, selectedPlan);
+            }
             AlertUtils.showInfo("Thành công",
-                "Đã sinh đơn hàng thành công! Batch " + batchId + " → COMPLETED.");
+                "Đã sinh đơn hàng thành công!\n"
+                + (subBatchId != null
+                    ? "Sub-batch " + subBatchId + " → COMPLETED."
+                    : "Batch " + batchId + " → COMPLETED."));
             navigateTo("/fxml/ood/OOD_SiteOrderList.fxml");
         } catch (Exception e) {
             AlertUtils.showError("Lỗi sinh đơn", e.getMessage());
         }
     }
 
-    // Quay lại màn hình tra cứu tồn kho (SupplyDashboard) với đúng batchId
     @FXML
     private void goBack() {
         try {
@@ -176,7 +212,8 @@ public class OOD_OrderGenerationController implements Initializable {
             scene.getStylesheets().add(
                 getClass().getResource("/css/global.css").toExternalForm());
             OOD_SupplyDashboardController ctrl = loader.getController();
-            ctrl.setBatchId(batchId);                          // ← giữ nguyên batch
+            ctrl.setBatchId(batchId);
+            if (subBatchId != null) ctrl.setSubBatchId(subBatchId);
             Stage stage = (Stage) lblUserName.getScene().getWindow();
             stage.setScene(scene);
         } catch (Exception e) {

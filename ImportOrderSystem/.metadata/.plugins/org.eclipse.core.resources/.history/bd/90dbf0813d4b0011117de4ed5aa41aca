@@ -1,0 +1,5 @@
+package com.importorder.repository;
+
+public class SiteInvitationRepository {
+
+}

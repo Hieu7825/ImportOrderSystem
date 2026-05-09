@@ -1,0 +1,5 @@
+package com.importorder.controller.site;
+
+public class Site_InvitationController {
+
+}

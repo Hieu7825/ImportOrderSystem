@@ -24,16 +24,28 @@
             <!-- Header -->
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Button text="← Quay lại" styleClass="btn-ghost" onAction="#goBack"/>
-                <VBox HBox.hgrow="ALWAYS" spacing="2">
+                <VBox HBox.hgrow="ALWAYS" spacing="4">
                     <Label text="Tra cứu tồn kho"
                            style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
-                    <Label fx:id="lblBatchId" style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                    <Label fx:id="lblBatchId"
+                           style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                    <!-- Sub-batch info (chỉ hiện khi là replacement) -->
+                    <Label fx:id="lblSubBatchInfo"
+                           style="-fx-text-fill: #F59E0B; -fx-font-size: 12px; -fx-font-weight: 600;"
+                           visible="false" managed="false"/>
                 </VBox>
                 <Button fx:id="btnCalculate" text="⚡ Tính phương án →"
                         styleClass="btn-primary" onAction="#handleCalculate" disable="true"/>
             </HBox>
 
-            <!-- Summary cards + Site filter panel -->
+            <!-- Edge Case B1: cảnh báo không có tồn kho -->
+            <Label fx:id="lblNoStockWarning"
+                   style="-fx-text-fill: #EF4444; -fx-font-size: 13px;
+                          -fx-background-color: rgba(239,68,68,0.08);
+                          -fx-background-radius: 8px; -fx-padding: 10 14;"
+                   wrapText="true" visible="false" managed="false"/>
+
+            <!-- Summary cards + Site filter -->
             <HBox spacing="12">
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="4">
                     <Label text="Mặt hàng" styleClass="stat-card-label"/>
@@ -50,27 +62,26 @@
                     <Label fx:id="lblShortage" text="0" styleClass="stat-card-value"
                            style="-fx-font-size: 20px; -fx-text-fill: #EF4444;"/>
                 </VBox>
-
                 <!-- Site filter panel -->
-                <VBox styleClass="stat-card" spacing="12">
+                <VBox styleClass="stat-card" spacing="12" HBox.hgrow="ALWAYS">
                     <Label text="Lọc site"
                            style="-fx-text-fill: #8ECDF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
-                    <Label text="Click để chọn ★ ưu tiên → ✕ Tránh → bình thường"
+                    <Label text="Click: bình thường → ★ ưu tiên → ✕ Tránh → bình thường"
                            style="-fx-text-fill: #4A5368; -fx-font-size: 11px;"/>
                     <FlowPane fx:id="flowSiteFilter" hgap="8" vgap="8"/>
                 </VBox>
             </HBox>
 
-            <!-- Stock matrix table -->
+            <!-- Matrix table -->
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                        style="-fx-background-color: transparent; -fx-border-color: #252A3A; -fx-border-radius: 10px;">
+                        style="-fx-background-color: transparent; -fx-border-color: #252A3A;
+                               -fx-border-radius: 10px;">
                 <TableView fx:id="tblMatrix" styleClass="table-view" minHeight="300">
                     <columns>
-                        <TableColumn fx:id="colItem" text="MẶT HÀNG" prefWidth="140"/>
-                        <TableColumn fx:id="colNeed" text="CẦN" prefWidth="70"/>
-                        <TableColumn fx:id="colTotal" text="TỔNG TỒN" prefWidth="90"/>
-                        <TableColumn fx:id="colSiteCount" text="#SITE" prefWidth="60"/>
-                        <!-- Site columns added dynamically -->
+                        <TableColumn fx:id="colItem"      text="MẶT HÀNG"  prefWidth="140"/>
+                        <TableColumn fx:id="colNeed"      text="CẦN"        prefWidth="70"/>
+                        <TableColumn fx:id="colTotal"     text="TỔNG TỒN"  prefWidth="90"/>
+                        <TableColumn fx:id="colSiteCount" text="#SITE"      prefWidth="60"/>
                     </columns>
                     <placeholder>
                         <Label text="Đang tải dữ liệu tồn kho..."

@@ -31,45 +31,57 @@
                 <Label text="Chi tiết đơn hàng"
                        style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"
                        HBox.hgrow="ALWAYS"/>
+                <!-- Hủy đơn: chỉ hiện khi SENT và chưa xác nhận -->
                 <Button fx:id="btnCancel" text="🗑 Hủy đơn" styleClass="btn-danger"
                         onAction="#handleCancel" visible="false" managed="false"/>
+                <!-- Tìm phương án thay thế: chỉ hiện khi CANCELLED -->
+                <Button fx:id="btnFindReplacement" text="🔄 Tìm phương án thay thế"
+                        style="-fx-background-color: rgba(245,158,11,0.15);
+                               -fx-text-fill: #F59E0B;
+                               -fx-background-radius: 8px; -fx-border-radius: 8px;
+                               -fx-border-color: rgba(245,158,11,0.3); -fx-border-width: 1px;
+                               -fx-padding: 10 20; -fx-cursor: hand;"
+                        onAction="#handleFindReplacement" visible="false" managed="false"/>
             </HBox>
 
             <!-- Info card -->
             <VBox styleClass="stat-card" spacing="16">
-                <HBox spacing="32">
+                <HBox spacing="24" alignment="CENTER_LEFT">
                     <VBox spacing="4">
                         <Label text="MÃ ĐƠN" styleClass="form-label"/>
                         <Label fx:id="lblSiteOrderId"
                                style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px; -fx-font-weight: 600;"/>
                     </VBox>
                     <VBox spacing="4">
-                        <Label text="BATCH" styleClass="form-label"/>
-                        <Label fx:id="lblBatchId" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        <Label text="BATCH / SUB-BATCH" styleClass="form-label"/>
+                        <Label fx:id="lblBatchId"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
                     </VBox>
                     <VBox spacing="4">
                         <Label text="SITE" styleClass="form-label"/>
-                        <Label fx:id="lblSiteCode" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        <Label fx:id="lblSiteCode"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
                     </VBox>
                     <VBox spacing="4">
                         <Label text="VẬN CHUYỂN" styleClass="form-label"/>
-                        <Label fx:id="lblMeans" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        <Label fx:id="lblMeans"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
                     </VBox>
                     <VBox spacing="4">
                         <Label text="DỰ KIẾN VỀ" styleClass="form-label"/>
-                        <Label fx:id="lblArrival" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        <Label fx:id="lblArrival"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
                     </VBox>
                     <VBox spacing="4">
                         <Label text="TRẠNG THÁI" styleClass="form-label"/>
-                        <Label fx:id="lblStatus" style="-fx-font-size: 13px; -fx-font-weight: 600;"/>
+                        <Label fx:id="lblStatus"
+                               style="-fx-font-size: 13px; -fx-font-weight: 600;"/>
                     </VBox>
                 </HBox>
-                <HBox spacing="16">
-                    <VBox spacing="4">
-                        <Label text="XÁC NHẬN TỪ SITE" styleClass="form-label"/>
-                        <Label fx:id="lblConfirmed" style="-fx-font-size: 13px;"/>
-                    </VBox>
-                </HBox>
+                <VBox spacing="4">
+                    <Label text="XÁC NHẬN TỪ SITE" styleClass="form-label"/>
+                    <Label fx:id="lblConfirmed" style="-fx-font-size: 13px;"/>
+                </VBox>
             </VBox>
 
             <!-- Items table -->
@@ -78,12 +90,12 @@
                        style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
                 <TableView fx:id="tblItems" styleClass="table-view" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="colCode" text="MÃ HÀNG" prefWidth="130"/>
-                        <TableColumn fx:id="colName" text="TÊN HÀNG" prefWidth="280"/>
-                        <TableColumn fx:id="colQty" text="SỐ LƯỢNG" prefWidth="110"/>
-                        <TableColumn fx:id="colUnit" text="ĐƠN VỊ" prefWidth="100"/>
-                        <TableColumn fx:id="colMeans" text="VẬN CHUYỂN" prefWidth="120"/>
-                        <TableColumn fx:id="colItemStatus" text="TRẠNG THÁI" prefWidth="130"/>
+                        <TableColumn fx:id="colCode"       text="MÃ HÀNG"      prefWidth="130"/>
+                        <TableColumn fx:id="colName"       text="TÊN HÀNG"     prefWidth="260"/>
+                        <TableColumn fx:id="colQty"        text="SỐ LƯỢNG"     prefWidth="110"/>
+                        <TableColumn fx:id="colUnit"       text="ĐƠN VỊ"       prefWidth="100"/>
+                        <TableColumn fx:id="colMeans"      text="VẬN CHUYỂN"   prefWidth="120"/>
+                        <TableColumn fx:id="colItemStatus" text="TRẠNG THÁI"   prefWidth="130"/>
                     </columns>
                     <placeholder>
                         <Label text="Không có mặt hàng nào" style="-fx-text-fill: #4A5368;"/>

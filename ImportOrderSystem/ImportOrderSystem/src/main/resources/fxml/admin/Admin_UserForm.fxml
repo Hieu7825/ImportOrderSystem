@@ -8,7 +8,6 @@
             stylesheets="@../../css/global.css"
             style="-fx-background-color: #0D0F14;">
 
-    <!-- SIDEBAR -->
     <left>
         <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
             <Label text="📦 Import Order" styleClass="sidebar-logo"/>
@@ -26,18 +25,15 @@
         </VBox>
     </left>
 
-    <!-- MAIN -->
     <center>
-        <VBox spacing="24" style="-fx-padding: 32;" maxWidth="600">
+        <VBox spacing="24" style="-fx-padding: 32;" maxWidth="620">
 
-            <!-- Header -->
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Button text="← Quay lại" styleClass="btn-ghost" onAction="#goUserList"/>
                 <Label fx:id="lblTitle" text="Tạo tài khoản mới"
                        style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
             </HBox>
 
-            <!-- Form Card -->
             <VBox styleClass="stat-card" spacing="20">
 
                 <!-- Username -->
@@ -61,12 +57,10 @@
                 <!-- Role -->
                 <VBox spacing="6">
                     <Label text="ROLE *" styleClass="form-label"/>
-                    <ComboBox fx:id="cmbRole" promptText="Chọn role..."
-                              maxWidth="Infinity"
+                    <ComboBox fx:id="cmbRole" promptText="Chọn role..." maxWidth="Infinity"
                               style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
                                      -fx-border-radius: 8px; -fx-background-radius: 8px;
-                                     -fx-text-fill: #E8ECF5;"
-                              onAction="#handleRoleChange"/>
+                                     -fx-text-fill: #E8ECF5;"/>
                     <Label fx:id="lblRoleErr" styleClass="form-error"
                            visible="false" managed="false"/>
                 </VBox>
@@ -74,11 +68,15 @@
                 <!-- Site Code (chỉ hiện khi role = SITE) -->
                 <VBox fx:id="vboxSiteCode" spacing="6" visible="false" managed="false">
                     <Label text="SITE CODE *" styleClass="form-label"/>
-                    <ComboBox fx:id="cmbSiteCode" promptText="Chọn site..."
+                    <ComboBox fx:id="cmbSiteCode" promptText="Chọn site được mời..."
                               maxWidth="Infinity"
                               style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
                                      -fx-border-radius: 8px; -fx-background-radius: 8px;
                                      -fx-text-fill: #E8ECF5;"/>
+                    <!-- Gợi ý về trạng thái site -->
+                    <Label fx:id="lblSiteHint"
+                           style="-fx-text-fill: #8892A8; -fx-font-size: 11px;"
+                           wrapText="true" visible="false" managed="false"/>
                     <Label fx:id="lblSiteErr" styleClass="form-error"
                            visible="false" managed="false"/>
                 </VBox>
@@ -87,15 +85,16 @@
                 <VBox spacing="6">
                     <Label fx:id="lblPasswordLabel" text="MẬT KHẨU TẠM *"
                            styleClass="form-label"/>
-                    <PasswordField fx:id="txtPassword" promptText="Nhập mật khẩu tạm (min 8 ký tự)..."
+                    <PasswordField fx:id="txtPassword"
+                                  promptText="Tối thiểu 8 ký tự..."
                                   styleClass="text-field"/>
                     <Label fx:id="lblPasswordErr" styleClass="form-error"
                            visible="false" managed="false"/>
                 </VBox>
 
                 <!-- Error chung -->
-                <Label fx:id="lblError" styleClass="form-error"
-                       wrapText="true" visible="false" managed="false"
+                <Label fx:id="lblError" styleClass="form-error" wrapText="true"
+                       visible="false" managed="false"
                        style="-fx-background-color: rgba(239,68,68,0.1);
                               -fx-background-radius: 6px; -fx-padding: 8 12;"/>
 

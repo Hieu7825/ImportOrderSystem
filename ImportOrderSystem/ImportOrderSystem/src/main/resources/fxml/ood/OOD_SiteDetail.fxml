@@ -24,71 +24,84 @@
     </left>
     <center>
         <VBox spacing="20" style="-fx-padding: 32;">
+
+            <!-- Header -->
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Button text="← Quay lại" styleClass="btn-ghost" onAction="#goSites"/>
-                <Label text="Chi tiết Site"
+                <Label text="Thông tin Site (Chỉ xem)"
                        style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"
                        HBox.hgrow="ALWAYS"/>
                 <Button fx:id="btnDeactivate" text="⛔ Ngừng liên doanh"
                         styleClass="btn-danger" onAction="#handleDeactivate"/>
             </HBox>
 
-            <!-- Info form -->
+            <!-- Thông báo read-only -->
+            <Label text="ℹ Thông tin site do SITE tự cập nhật. OOD chỉ có thể xem và ngừng liên doanh."
+                   style="-fx-text-fill: #4A5368; -fx-font-size: 12px;
+                          -fx-background-color: rgba(79,110,247,0.06);
+                          -fx-background-radius: 6px; -fx-padding: 8 12;"/>
+
+            <!-- Thông tin cơ bản (read-only) -->
             <VBox styleClass="stat-card" spacing="16">
                 <Label text="Thông tin cơ bản"
                        style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
-                <HBox spacing="16">
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                <HBox spacing="32">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
                         <Label text="MÃ SITE" styleClass="form-label"/>
                         <Label fx:id="lblSiteCode"
-                               style="-fx-text-fill: #8892A8; -fx-font-size: 14px;"/>
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
                     </VBox>
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label text="TRẠNG THÁI" styleClass="form-label"/>
-                        <Label fx:id="lblStatus" style="-fx-font-size: 13px; -fx-font-weight: 600;"/>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="TRẠNG THÁI LIÊN DOANH" styleClass="form-label"/>
+                        <Label fx:id="lblPartnerStatus"
+                               style="-fx-font-size: 13px; -fx-font-weight: 600;"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="TRẠNG THÁI HỆ THỐNG" styleClass="form-label"/>
+                        <Label fx:id="lblStatus"
+                               style="-fx-font-size: 13px; -fx-font-weight: 600;"/>
                     </VBox>
                 </HBox>
-                <VBox spacing="6">
-                    <Label text="TÊN SITE *" styleClass="form-label"/>
-                    <TextField fx:id="txtSiteName" styleClass="text-field"/>
-                </VBox>
                 <HBox spacing="16">
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="TÊN SITE" styleClass="form-label"/>
+                        <Label fx:id="lblSiteName"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
                         <Label text="QUỐC GIA" styleClass="form-label"/>
-                        <TextField fx:id="txtCountry" styleClass="text-field"/>
-                    </VBox>
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label text="EMAIL" styleClass="form-label"/>
-                        <TextField fx:id="txtEmail" styleClass="text-field"/>
+                        <Label fx:id="lblCountry"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
                     </VBox>
                 </HBox>
                 <HBox spacing="16">
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label text="SỐ NGÀY TÀU *" styleClass="form-label"/>
-                        <TextField fx:id="txtShipDays" styleClass="text-field"/>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="EMAIL LIÊN HỆ" styleClass="form-label"/>
+                        <Label fx:id="lblEmail"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
                     </VBox>
-                    <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label text="SỐ NGÀY HÀNG KHÔNG *" styleClass="form-label"/>
-                        <TextField fx:id="txtAirDays" styleClass="text-field"/>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="SỐ NGÀY TÀU" styleClass="form-label"/>
+                        <Label fx:id="lblShipDays"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
                     </VBox>
-                </HBox>
-                <HBox alignment="CENTER_RIGHT" spacing="12">
-                    <Button text="💾 Lưu thông tin" styleClass="btn-primary" onAction="#handleSaveInfo"/>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="SỐ NGÀY HÀNG KHÔNG" styleClass="form-label"/>
+                        <Label fx:id="lblAirDays"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
                 </HBox>
             </VBox>
 
-            <!-- Catalog -->
+            <!-- Catalog (read-only) -->
             <VBox styleClass="stat-card" spacing="12">
-                <HBox alignment="CENTER_LEFT">
-                    <Label text="Mặt hàng kinh doanh"
-                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"
-                           HBox.hgrow="ALWAYS"/>
-                    <Button text="+ Thêm" styleClass="btn-ghost" onAction="#handleAddCatalog"/>
-                </HBox>
-                <ListView fx:id="lstCatalog" prefHeight="150"
+                <Label text="Mặt hàng kinh doanh (do SITE tự cập nhật)"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                <ListView fx:id="lstCatalog" prefHeight="180"
                           style="-fx-background-color: #0D0F14; -fx-border-color: #252A3A;
                                  -fx-border-radius: 8px; -fx-background-radius: 8px;"/>
             </VBox>
+
         </VBox>
     </center>
 </BorderPane>

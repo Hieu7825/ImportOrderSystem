@@ -3,6 +3,7 @@ package com.importorder.repository;
 import com.importorder.config.MongoConfig;
 import com.importorder.model.OrderItem;
 import com.importorder.model.OrderRequest;
+import com.importorder.model.SubBatch;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
@@ -16,6 +17,7 @@ import java.util.List;
 public class OrderRequestRepository {
 
     private final MongoCollection<Document> collection;
+    private final SubBatchRepository subBatchRepo = new SubBatchRepository();
 
     public OrderRequestRepository() {
         this.collection = MongoConfig.getDatabase().getCollection("order_requests");
@@ -29,26 +31,40 @@ public class OrderRequestRepository {
 
     public OrderRequest findByBatchId(String batchId) {
         Document doc = collection.find(Filters.eq("batchId", batchId)).first();
-        return doc != null ? toOrderRequest(doc) : null;
+        if (doc == null) return null;
+        OrderRequest req = toOrderRequest(doc);
+        // Load sub-batches
+        req.setSubBatches(subBatchRepo.findByParentBatch(batchId));
+        return req;
     }
 
     public List<OrderRequest> findAll() {
         List<OrderRequest> list = new ArrayList<>();
-        for (Document doc : collection.find()) list.add(toOrderRequest(doc));
+        for (Document doc : collection.find()) {
+            OrderRequest req = toOrderRequest(doc);
+            req.setSubBatches(subBatchRepo.findByParentBatch(req.getBatchId()));
+            list.add(req);
+        }
         return list;
     }
 
     public List<OrderRequest> findByStatus(String status) {
         List<OrderRequest> list = new ArrayList<>();
-        for (Document doc : collection.find(Filters.eq("status", status)))
-            list.add(toOrderRequest(doc));
+        for (Document doc : collection.find(Filters.eq("status", status))) {
+            OrderRequest req = toOrderRequest(doc);
+            req.setSubBatches(subBatchRepo.findByParentBatch(req.getBatchId()));
+            list.add(req);
+        }
         return list;
     }
 
     public List<OrderRequest> findByCreatedBy(String username) {
         List<OrderRequest> list = new ArrayList<>();
-        for (Document doc : collection.find(Filters.eq("createdBy", username)))
-            list.add(toOrderRequest(doc));
+        for (Document doc : collection.find(Filters.eq("createdBy", username))) {
+            OrderRequest req = toOrderRequest(doc);
+            req.setSubBatches(subBatchRepo.findByParentBatch(req.getBatchId()));
+            list.add(req);
+        }
         return list;
     }
 
@@ -66,11 +82,11 @@ public class OrderRequestRepository {
         collection.updateOne(
             Filters.eq("batchId", batchId),
             Updates.combine(
-                Updates.set("status", "CANCELLED"),
+                Updates.set("status",      "CANCELLED"),
                 Updates.set("cancelledBy", cancelledBy),
                 Updates.set("cancelledAt", LocalDateTime.now().toString()),
-                Updates.set("cancelReason", reason),
-                Updates.set("updatedAt", LocalDateTime.now().toString())
+                Updates.set("cancelReason",reason),
+                Updates.set("updatedAt",   LocalDateTime.now().toString())
             )
         );
     }
@@ -79,7 +95,7 @@ public class OrderRequestRepository {
         collection.updateOne(
             Filters.eq("batchId", batchId),
             Updates.combine(
-                Updates.set("items", toItemDocuments(newItems)),
+                Updates.set("items",     toItemDocuments(newItems)),
                 Updates.set("updatedAt", LocalDateTime.now().toString())
             )
         );
@@ -95,9 +111,11 @@ public class OrderRequestRepository {
             .append("updatedAt",   req.getUpdatedAt().toString())
             .append("status",      req.getStatus())
             .append("cancelledBy", req.getCancelledBy())
-            .append("cancelledAt", req.getCancelledAt() != null ? req.getCancelledAt().toString() : null)
+            .append("cancelledAt", req.getCancelledAt() != null
+                ? req.getCancelledAt().toString() : null)
             .append("cancelReason",req.getCancelReason())
             .append("items",       toItemDocuments(req.getItems()));
+        // subBatches lưu riêng trong collection sub_batches
     }
 
     private List<Document> toItemDocuments(List<OrderItem> items) {
@@ -106,7 +124,7 @@ public class OrderRequestRepository {
         for (OrderItem item : items) {
             docs.add(new Document()
                 .append("itemCode",            item.getItemCode())
-                .append("itemName",            item.getItemName())   // ← thêm
+                .append("itemName",            item.getItemName())
                 .append("quantityOrdered",     item.getQuantityOrdered())
                 .append("unit",                item.getUnit())
                 .append("desiredDeliveryDate", item.getDesiredDeliveryDate() != null
@@ -137,7 +155,7 @@ public class OrderRequestRepository {
             for (Document d : itemDocs) {
                 OrderItem item = new OrderItem();
                 item.setItemCode(d.getString("itemCode"));
-                item.setItemName(d.getString("itemName"));   // ← thêm
+                item.setItemName(d.getString("itemName"));
                 item.setQuantityOrdered(d.getInteger("quantityOrdered", 0));
                 item.setUnit(d.getString("unit"));
                 String date = d.getString("desiredDeliveryDate");
