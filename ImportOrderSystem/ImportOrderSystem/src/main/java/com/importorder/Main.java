@@ -18,7 +18,7 @@ public class Main extends Application {
     	javafx.scene.text.Font.loadFont(
     		    getClass().getResourceAsStream("/fonts/BeVietnamPro-Bold.ttf"), 14);
     	// Auto seed data nếu DB trống
-    	DataSeeder.seed();
+//    	DataSeeder.seed();
         FXMLLoader loader = new FXMLLoader(
             getClass().getResource("/fxml/Login.fxml")
         );
