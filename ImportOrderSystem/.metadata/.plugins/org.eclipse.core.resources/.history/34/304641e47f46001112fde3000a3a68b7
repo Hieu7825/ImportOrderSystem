@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.sd.SD_OrderRequestListController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item, nav-item-active"
+                    maxWidth="Infinity"/>
+            <Button text="📦  Danh sách mặt hàng" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goMerchandise"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="BỘ PHẬN BÁN HÀNG" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout"
+                    maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <Label text="Yêu cầu nhập hàng"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"
+                       HBox.hgrow="ALWAYS"/>
+                <Button text="+ Tạo yêu cầu mới" styleClass="btn-primary"
+                        onAction="#handleCreate"/>
+            </HBox>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <ComboBox fx:id="cmbStatus" promptText="Tất cả trạng thái"
+                          style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
+                                 -fx-border-radius: 8px; -fx-background-radius: 8px;
+                                 -fx-text-fill: #E8ECF5;" prefWidth="200"
+                          onAction="#handleFilter"/>
+            </HBox>
+            <TableView fx:id="tblRequests" styleClass="table-view" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colBatchId" text="BATCH ID" prefWidth="200"/>
+                    <TableColumn fx:id="colItems" text="SỐ MẶT HÀNG" prefWidth="130"/>
+                    <TableColumn fx:id="colStatus" text="TRẠNG THÁI" prefWidth="140"/>
+                    <TableColumn fx:id="colCreatedAt" text="NGÀY TẠO" prefWidth="160"/>
+                    <TableColumn fx:id="colActions" text="THAO TÁC" prefWidth="200"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có yêu cầu nhập hàng nào"
+                           style="-fx-text-fill: #4A5368; -fx-font-size: 13px;"/>
+                </placeholder>
+            </TableView>
+            <!-- Thêm sau TableView -->
+		<HBox alignment="CENTER" spacing="12" style="-fx-padding: 8 0 0 0;">
+ 		   <Button text="◀ Trang trước" styleClass="btn-ghost" onAction="#handlePrevPage"/>
+  		  <Label fx:id="lblPageInfo"
+  		         style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+ 		   <Button text="Trang sau ▶" styleClass="btn-ghost" onAction="#handleNextPage"/>
+		</HBox>
+        </VBox>
+    </center>
+</BorderPane>

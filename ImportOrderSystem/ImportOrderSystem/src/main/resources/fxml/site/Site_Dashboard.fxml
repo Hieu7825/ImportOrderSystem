@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.site.Site_DashboardController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <Button text="ℹ  Thông tin site" styleClass="nav-item" maxWidth="Infinity" onAction="#goProfile"/>
+            <Button text="📋  Mặt hàng KD" styleClass="nav-item" maxWidth="Infinity" onAction="#goCatalog"/>
+            <Button text="📦  Tồn kho" styleClass="nav-item" maxWidth="Infinity" onAction="#goStock"/>
+            <Button text="🛒  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrders"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label fx:id="lblSiteCode" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+            <Button text="🔑 Đổi mật khẩu" styleClass="btn-ghost" maxWidth="Infinity" onAction="#handleChangePassword" style="-fx-font-size: 12px;"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="24" style="-fx-padding: 32;">
+            <Label text="Tổng quan Site"
+                   style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+            <HBox spacing="16">
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Đơn hàng mới" styleClass="stat-card-label"/>
+                    <Label fx:id="lblNewOrders" text="0" styleClass="stat-card-value" style="-fx-text-fill: #38BDF8;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Chờ xác nhận" styleClass="stat-card-label"/>
+                    <Label fx:id="lblUnconfirmed" text="0" styleClass="stat-card-value" style="-fx-text-fill: #F59E0B;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Mặt hàng KD" styleClass="stat-card-label"/>
+                    <Label fx:id="lblCatalogCount" text="0" styleClass="stat-card-value" style="-fx-text-fill: #22C55E;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

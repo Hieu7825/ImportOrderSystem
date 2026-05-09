@@ -1,0 +1,76 @@
+package com.importorder.controller.admin;
+
+import com.importorder.service.UserManagementService;
+import com.importorder.util.SessionManager;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
+import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import com.importorder.util.NavigationHelper;
+
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+
+public class Admin_DashboardController implements Initializable {
+
+    @FXML private Label lblUserName;
+    @FXML private Label lblTotalUsers;
+    @FXML private Label lblActiveUsers;
+    @FXML private Label lblLockedUsers;
+
+    private final UserManagementService userService = new UserManagementService();
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        lblUserName.setText(SessionManager.getCurrentUser().getFullName());
+        loadStats();
+    }
+
+    private void loadStats() {
+        var users = userService.getAllUsers();
+        lblTotalUsers.setText(String.valueOf(users.size()));
+        lblActiveUsers.setText(String.valueOf(users.stream().filter(u -> u.isActive()).count()));
+        lblLockedUsers.setText(String.valueOf(users.stream().filter(u -> !u.isActive()).count()));
+    }
+
+    @FXML
+    private void goToUserList() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/admin/Admin_UserList.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) lblUserName.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            e.printStackTrace();
+            com.importorder.util.AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleLogout() {
+        SessionManager.logout();
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/fxml/Login.fxml"));
+            javafx.scene.Scene scene = new javafx.scene.Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) lblUserName.getScene().getWindow();
+            stage.setScene(scene);
+            stage.setTitle("Import Order System");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @FXML
+    private void handleChangePassword() {
+        NavigationHelper.openChangePassword(
+            (Stage) lblUserName.getScene().getWindow());
+    }
+}

@@ -1,0 +1,107 @@
+package com.importorder.repository;
+
+import com.importorder.config.MongoConfig;
+import com.importorder.model.FinalOrder;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import org.bson.Document;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class FinalOrderRepository {
+
+    private final MongoCollection<Document> collection;
+
+    public FinalOrderRepository() {
+        this.collection = MongoConfig.getDatabase().getCollection("final_orders");
+    }
+
+    public void save(FinalOrder fo) {
+        Document doc = toDocument(fo);
+        collection.insertOne(doc);
+        fo.setId(doc.getObjectId("_id"));
+    }
+
+    public void saveAll(List<FinalOrder> orders) {
+        for (FinalOrder fo : orders) save(fo);
+    }
+
+    public List<FinalOrder> findBySiteOrder(String siteOrderId) {
+        List<FinalOrder> list = new ArrayList<>();
+        for (Document doc : collection.find(Filters.eq("siteOrderId", siteOrderId)))
+            list.add(toFinalOrder(doc));
+        return list;
+    }
+
+    public List<FinalOrder> findByBatch(String batchId) {
+        List<FinalOrder> list = new ArrayList<>();
+        for (Document doc : collection.find(Filters.eq("batchId", batchId)))
+            list.add(toFinalOrder(doc));
+        return list;
+    }
+
+    public List<FinalOrder> findBySite(String siteCode) {
+        List<FinalOrder> list = new ArrayList<>();
+        for (Document doc : collection.find(Filters.eq("siteCode", siteCode)))
+            list.add(toFinalOrder(doc));
+        return list;
+    }
+
+    public void updateStatus(String siteOrderId, String itemCode, String status) {
+        collection.updateOne(
+            Filters.and(
+                Filters.eq("siteOrderId", siteOrderId),
+                Filters.eq("itemCode", itemCode)
+            ),
+            Updates.set("status", status)
+        );
+    }
+
+    public void cancelBySiteOrder(String siteOrderId) {
+        collection.updateMany(
+            Filters.eq("siteOrderId", siteOrderId),
+            Updates.set("status", "CANCELLED")
+        );
+    }
+
+    private Document toDocument(FinalOrder fo) {
+        return new Document()
+            .append("siteOrderId", fo.getSiteOrderId())
+            .append("batchId", fo.getBatchId())
+            .append("siteCode", fo.getSiteCode())
+            .append("itemCode", fo.getItemCode())
+            .append("itemName", fo.getItemName())
+            .append("quantityOrdered", fo.getQuantityOrdered())
+            .append("unit", fo.getUnit())
+            .append("deliveryMeans", fo.getDeliveryMeans())
+            .append("status", fo.getStatus())
+            .append("createdAt", LocalDateTime.now().toString());
+    }
+
+    private FinalOrder toFinalOrder(Document doc) {
+        FinalOrder fo = new FinalOrder();
+        fo.setId(doc.getObjectId("_id"));
+        fo.setSiteOrderId(doc.getString("siteOrderId"));
+        fo.setBatchId(doc.getString("batchId"));
+        fo.setSiteCode(doc.getString("siteCode"));
+        fo.setItemCode(doc.getString("itemCode"));
+        String itemName = doc.getString("itemName");
+        if (itemName == null || itemName.isBlank()) {
+            var merch = merchRepo.findByCode(fo.getItemCode());
+            itemName = merch != null ? merch.getItemName() : fo.getItemCode();
+        }
+        fo.setItemName(itemName);
+        fo.setQuantityOrdered(doc.getInteger("quantityOrdered", 0));
+        fo.setUnit(doc.getString("unit"));
+        fo.setDeliveryMeans(doc.getString("deliveryMeans"));
+        fo.setStatus(doc.getString("status"));
+        String createdAt = doc.getString("createdAt");
+        if (createdAt != null) fo.setCreatedAt(LocalDateTime.parse(createdAt));
+        return fo;
+    }
+    private final com.importorder.repository.MerchandiseRepository merchRepo = 
+    	    new com.importorder.repository.MerchandiseRepository();
+}

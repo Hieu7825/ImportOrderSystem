@@ -1,0 +1,225 @@
+package com.importorder.controller.admin;
+
+import com.importorder.model.User;
+import com.importorder.service.UserManagementService;
+import com.importorder.util.AlertUtils;
+import com.importorder.util.DateUtils;
+import com.importorder.util.SessionManager;
+import com.importorder.util.PaginationHelper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
+public class Admin_UserListController implements Initializable {
+
+    @FXML private Label lblUserName;
+    @FXML private TextField txtSearch;
+    @FXML private ComboBox<String> cmbRole;
+    @FXML private ComboBox<String> cmbStatus;
+    @FXML private TableView<User> tblUsers;
+    @FXML private TableColumn<User, String> colUsername;
+    @FXML private TableColumn<User, String> colFullName;
+    @FXML private TableColumn<User, String> colRole;
+    @FXML private TableColumn<User, String> colSiteCode;
+    @FXML private TableColumn<User, String> colStatus;
+    @FXML private TableColumn<User, String> colCreatedAt;
+    @FXML private TableColumn<User, Void> colActions;
+    @FXML private Label lblPageInfo;
+
+    private PaginationHelper<User> pagination;
+    private final UserManagementService userService = new UserManagementService();
+    private List<User> allUsers;
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        lblUserName.setText(SessionManager.getCurrentUser().getFullName());
+        setupComboBoxes();
+        setupTable();
+        pagination = new PaginationHelper<>(tblUsers, lblPageInfo);
+        loadData();
+    }
+
+    private void setupComboBoxes() {
+        cmbRole.setItems(FXCollections.observableArrayList(
+            "Tất cả", "SD", "OOD", "SITE", "WM", "ADMIN"));
+        cmbRole.setValue("Tất cả");
+
+        cmbStatus.setItems(FXCollections.observableArrayList(
+            "Tất cả", "Đang hoạt động", "Bị khóa"));
+        cmbStatus.setValue("Tất cả");
+    }
+
+    private void setupTable() {
+        colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
+        colFullName.setCellValueFactory(new PropertyValueFactory<>("fullName"));
+        colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
+
+        colSiteCode.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getSiteCode() != null
+                ? c.getValue().getSiteCode() : "--"));
+
+        colStatus.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().isActive() ? "✅ Hoạt động" : "🔒 Bị khóa"));
+
+        colCreatedAt.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getCreatedAt() != null
+                ? DateUtils.formatDateTime(c.getValue().getCreatedAt()) : "--"));
+
+        // Action buttons column
+        colActions.setCellFactory(col -> new TableCell<>() {
+            final Button btnEdit   = new Button("Sửa");
+            final Button btnToggle = new Button();
+            final HBox   box       = new HBox(8, btnEdit, btnToggle);
+
+            {
+                btnEdit.setStyle(
+                    "-fx-background-color: rgba(79,110,247,0.15); " +
+                    "-fx-text-fill: #4F6EF7; -fx-background-radius: 6px; -fx-cursor: hand;");
+                btnToggle.setStyle("-fx-background-radius: 6px; -fx-cursor: hand;");
+
+                btnEdit.setOnAction(e -> {
+                    User u = getTableView().getItems().get(getIndex());
+                    goToEdit(u);
+                });
+                btnToggle.setOnAction(e -> {
+                    User u = getTableView().getItems().get(getIndex());
+                    handleToggleActive(u);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                    return;
+                }
+
+                User u = getTableView().getItems().get(getIndex());
+                String currentUsername = SessionManager.getUsername();
+
+                // Không cho sửa/khóa chính mình
+                if (u.getUsername().equals(currentUsername)) {
+                    setGraphic(null);
+                    return;
+                }
+
+                if (u.isActive()) {
+                    btnToggle.setText("Khóa");
+                    btnToggle.setStyle(
+                        "-fx-background-color: rgba(239,68,68,0.15); " +
+                        "-fx-text-fill: #EF4444; -fx-background-radius: 6px; -fx-cursor: hand;");
+                } else {
+                    btnToggle.setText("Mở khóa");
+                    btnToggle.setStyle(
+                        "-fx-background-color: rgba(34,197,94,0.15); " +
+                        "-fx-text-fill: #22C55E; -fx-background-radius: 6px; -fx-cursor: hand;");
+                }
+                setGraphic(box);
+            }
+        });
+    }
+
+    private void loadData() {
+        allUsers = userService.getAllUsers();
+        applyFilter();
+    }
+
+    @FXML
+    private void handleSearch() {
+        applyFilter();
+    }
+
+    private void applyFilter() {
+        String search = txtSearch.getText().toLowerCase().trim();
+        String role   = cmbRole.getValue();
+        String status = cmbStatus.getValue();
+
+        List<User> filtered = allUsers.stream()
+            .filter(u -> search.isEmpty()
+                || u.getUsername().toLowerCase().contains(search)
+                || (u.getFullName() != null && u.getFullName().toLowerCase().contains(search)))
+            .filter(u -> "Tất cả".equals(role) || role.equals(u.getRole()))
+            .filter(u -> {
+                if ("Đang hoạt động".equals(status)) return u.isActive();
+                if ("Bị khóa".equals(status))        return !u.isActive();
+                return true;
+            })
+            .collect(Collectors.toList());
+
+        pagination.setItems(filtered);
+    }
+
+    @FXML
+    private void handleCreate() {
+        navigateTo("/fxml/admin/Admin_UserForm.fxml");
+    }
+
+    private void goToEdit(User user) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/admin/Admin_UserForm.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            Admin_UserFormController ctrl = loader.getController();
+            ctrl.setEditMode(user);
+            Stage stage = (Stage) tblUsers.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    private void handleToggleActive(User user) {
+        String action  = user.isActive() ? "khóa" : "mở khóa";
+        boolean confirm = AlertUtils.showConfirm("Xác nhận",
+            "Bạn có chắc muốn " + action + " tài khoản '" + user.getUsername() + "'?");
+        if (confirm) {
+            try {
+                userService.toggleActive(user.getUsername());
+                loadData();
+            } catch (Exception e) {
+                AlertUtils.showError("Lỗi", e.getMessage());
+            }
+        }
+    }
+
+    // ── Pagination ────────────────────────────────────────────────────────────
+    @FXML private void handlePrevPage() { pagination.prevPage(); }
+    @FXML private void handleNextPage() { pagination.nextPage(); }
+
+    // ── Navigation ────────────────────────────────────────────────────────────
+    @FXML private void goDashboard() { navigateTo("/fxml/admin/Admin_Dashboard.fxml"); }
+
+    @FXML
+    private void handleLogout() {
+        SessionManager.logout();
+        navigateTo("/fxml/Login.fxml");
+    }
+
+    private void navigateTo(String fxmlPath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) tblUsers.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi điều hướng", e.getMessage());
+        }
+    }
+}

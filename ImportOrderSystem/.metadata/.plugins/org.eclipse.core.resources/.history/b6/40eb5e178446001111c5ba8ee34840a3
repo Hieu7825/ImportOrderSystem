@@ -1,0 +1,57 @@
+package com.importorder.util;
+
+import javafx.collections.FXCollections;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
+import java.util.List;
+
+public class PaginationHelper<T> {
+
+    private static final int PAGE_SIZE = 20;
+    private List<T> allItems;
+    private int currentPage = 0;
+    private TableView<T> tableView;
+    private Label lblPageInfo;
+
+    public PaginationHelper(TableView<T> tableView, Label lblPageInfo) {
+        this.tableView = tableView;
+        this.lblPageInfo = lblPageInfo;
+    }
+
+    public void setItems(List<T> items) {
+        this.allItems = items;
+        this.currentPage = 0;
+        refresh();
+    }
+
+    public void nextPage() {
+        if ((currentPage + 1) * PAGE_SIZE < allItems.size()) {
+            currentPage++;
+            refresh();
+        }
+    }
+
+    public void prevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            refresh();
+        }
+    }
+
+    public int getTotalPages() {
+        if (allItems == null || allItems.isEmpty()) return 1;
+        return (int) Math.ceil((double) allItems.size() / PAGE_SIZE);
+    }
+
+    private void refresh() {
+        if (allItems == null) return;
+        int from = currentPage * PAGE_SIZE;
+        int to = Math.min(from + PAGE_SIZE, allItems.size());
+        tableView.setItems(FXCollections.observableArrayList(
+            allItems.subList(from, to)));
+        if (lblPageInfo != null) {
+            lblPageInfo.setText("Trang " + (currentPage + 1) + " / " + getTotalPages()
+                + "  (" + allItems.size() + " bản ghi)");
+        }
+    }
+}

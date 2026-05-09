@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.admin.Admin_DashboardController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+
+    <!-- SIDEBAR -->
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A; -fx-padding: 4 0;"/>
+
+            <Button text="⬛  Tổng quan" styleClass="nav-item, nav-item-active"
+                    maxWidth="Infinity"/>
+            <Button text="👥  Quản lý tài khoản" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goToUserList"/>
+
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" text="Admin" styleClass="sidebar-user-name"/>
+            <Label text="ADMIN" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout"
+                    maxWidth="Infinity" onAction="#handleLogout"/>
+            <Button text="🔑 Đổi mật khẩu" styleClass="btn-ghost"
+        maxWidth="Infinity" onAction="#handleChangePassword"
+        style="-fx-font-size: 12px;"/>
+        </VBox>
+    </left>
+
+    <!-- MAIN CONTENT -->
+    <center>
+        <VBox spacing="24" style="-fx-padding: 32;">
+
+            <!-- Topbar -->
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Tổng quan hệ thống"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+            </HBox>
+
+            <!-- Stat Cards -->
+            <HBox spacing="16">
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Tổng tài khoản" styleClass="stat-card-label"/>
+                    <Label fx:id="lblTotalUsers" text="0" styleClass="stat-card-value"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Đang hoạt động" styleClass="stat-card-label"/>
+                    <Label fx:id="lblActiveUsers" text="0"
+                           styleClass="stat-card-value"
+                           style="-fx-text-fill: #22C55E;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Bị khóa" styleClass="stat-card-label"/>
+                    <Label fx:id="lblLockedUsers" text="0"
+                           styleClass="stat-card-value"
+                           style="-fx-text-fill: #EF4444;"/>
+                </VBox>
+            </HBox>
+
+            <!-- Quick info -->
+            <VBox styleClass="stat-card" spacing="12">
+                <Label text="Thông tin hệ thống"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                <Label text="✅ Kết nối MongoDB: OK"
+                       style="-fx-text-fill: #22C55E; -fx-font-size: 13px;"/>
+                <Label text="✅ Import Order System v1.0"
+                       style="-fx-text-fill: #8892A8; -fx-font-size: 13px;"/>
+            </VBox>
+
+        </VBox>
+    </center>
+</BorderPane>

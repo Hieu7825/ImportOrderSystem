@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.ood.OOD_SiteOrderDetailController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderRequests"/>
+            <Button text="📦  Đơn hàng" styleClass="nav-item, nav-item-active" maxWidth="Infinity" onAction="#goSiteOrders"/>
+            <Button text="🏭  Quản lý Site" styleClass="nav-item" maxWidth="Infinity" onAction="#goSites"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ĐẶT HÀNG QUỐC TẾ" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Button text="← Quay lại" styleClass="btn-ghost" onAction="#goSiteOrders"/>
+                <Label text="Chi tiết đơn hàng"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"
+                       HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btnCancel" text="🗑 Hủy đơn" styleClass="btn-danger"
+                        onAction="#handleCancel" visible="false" managed="false"/>
+                <Button fx:id="btnReplace" text="🔄 Tìm kiếm phương án thay thế"
+                        style="-fx-background-color: rgba(168,85,247,0.15); -fx-text-fill: #A855F7;
+                               -fx-background-radius: 8px; -fx-cursor: hand; -fx-font-size: 13px;"
+                        onAction="#handleReplace" visible="false" managed="false"/>
+            </HBox>
+
+            <!-- Info card -->
+            <VBox styleClass="stat-card" spacing="16">
+                <HBox spacing="32">
+                    <VBox spacing="4">
+                        <Label text="MÃ ĐƠN" styleClass="form-label"/>
+                        <Label fx:id="lblSiteOrderId"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px; -fx-font-weight: 600;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="BATCH" styleClass="form-label"/>
+                        <Label fx:id="lblBatchId" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="SITE" styleClass="form-label"/>
+                        <Label fx:id="lblSiteCode" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="VẬN CHUYỂN" styleClass="form-label"/>
+                        <Label fx:id="lblMeans" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="DỰ KIẾN VỀ" styleClass="form-label"/>
+                        <Label fx:id="lblArrival" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="TRẠNG THÁI" styleClass="form-label"/>
+                        <Label fx:id="lblStatus" style="-fx-font-size: 13px; -fx-font-weight: 600;"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="32">
+                    <VBox spacing="4">
+                        <Label text="XÁC NHẬN TỪ SITE" styleClass="form-label"/>
+                        <Label fx:id="lblConfirmed" style="-fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label fx:id="lblCancelReason"
+                               style="-fx-text-fill: #EF4444; -fx-font-size: 13px; -fx-font-weight: 600;"
+                               visible="false" managed="false"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Items table -->
+            <VBox spacing="8" VBox.vgrow="ALWAYS">
+                <Label text="Danh sách mặt hàng trong đơn"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                <TableView fx:id="tblItems" styleClass="table-view" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colCode" text="MÃ HÀNG" prefWidth="130"/>
+                        <TableColumn fx:id="colName" text="TÊN HÀNG" prefWidth="280"/>
+                        <TableColumn fx:id="colQty" text="SỐ LƯỢNG" prefWidth="110"/>
+                        <TableColumn fx:id="colUnit" text="ĐƠN VỊ" prefWidth="100"/>
+                        <TableColumn fx:id="colMeans" text="VẬN CHUYỂN" prefWidth="120"/>
+                        <TableColumn fx:id="colItemStatus" text="TRẠNG THÁI" prefWidth="130"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="Không có mặt hàng nào" style="-fx-text-fill: #4A5368;"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+
+        </VBox>
+    </center>
+</BorderPane>

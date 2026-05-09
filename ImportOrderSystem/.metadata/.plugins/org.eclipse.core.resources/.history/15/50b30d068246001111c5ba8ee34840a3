@@ -1,0 +1,101 @@
+package com.importorder.util;
+
+import com.importorder.model.*;
+import com.importorder.repository.*;
+import com.importorder.service.AuthService;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class DataSeeder {
+
+    public static void seed() {
+        UserRepository userRepo = new UserRepository();
+        MerchandiseRepository merchRepo = new MerchandiseRepository();
+        SiteRepository siteRepo = new SiteRepository();
+
+        // Chỉ seed nếu chưa có data
+        if (userRepo.findByUsername("admin") != null) {
+            System.out.println("[Seeder] Data đã tồn tại, bỏ qua.");
+            return;
+        }
+
+        System.out.println("[Seeder] Đang khởi tạo data mẫu...");
+
+        // === USERS ===
+        createUser(userRepo, "admin", "Admin@123", "ADMIN", "System Admin", null);
+        createUser(userRepo, "sd_user1", "Admin@123", "SD", "Nguyễn Văn A", null);
+        createUser(userRepo, "ood_user1", "Admin@123", "OOD", "Trần Thị B", null);
+        createUser(userRepo, "wm_user1", "Admin@123", "WM", "Lê Văn C", null);
+        createUser(userRepo, "site_s01", "Admin@123", "SITE", "Tokyo Import Contact", "S01");
+        createUser(userRepo, "site_s02", "Admin@123", "SITE", "Seoul Trading Contact", "S02");
+        createUser(userRepo, "site_s03", "Admin@123", "SITE", "Shanghai Goods Contact", "S03");
+
+        // === MERCHANDISE ===
+        createMerch(merchRepo, "MH001", "Điện thoại Samsung Galaxy S25", "chiếc", "Điện tử");
+        createMerch(merchRepo, "MH002", "Laptop Dell XPS 15", "chiếc", "Điện tử");
+        createMerch(merchRepo, "MH003", "Tai nghe Sony WH-1000XM5", "chiếc", "Phụ kiện");
+        createMerch(merchRepo, "MH004", "Đồng hồ Apple Watch Series 10", "chiếc", "Phụ kiện");
+        createMerch(merchRepo, "MH005", "Máy ảnh Canon EOS R6", "chiếc", "Máy ảnh");
+
+        // === SITES ===
+        createSite(siteRepo, "S01", "Tokyo Import Co.", "Japan",
+            "contact@tokyoimport.jp", 14, 3,
+            List.of("MH001", "MH002", "MH003"));
+        createSite(siteRepo, "S02", "Seoul Trading Co.", "Korea",
+            "contact@seoultrade.kr", 10, 2,
+            List.of("MH001", "MH004", "MH005"));
+        createSite(siteRepo, "S03", "Shanghai Goods Ltd.", "China",
+            "contact@shanghaig.cn", 7, 1,
+            List.of("MH002", "MH003", "MH004", "MH005"));
+
+        System.out.println("[Seeder] Khởi tạo data mẫu thành công!");
+        System.out.println("[Seeder] Tài khoản mặc định - Username: admin / Password: Admin@123");
+    }
+
+    private static void createUser(UserRepository repo, String username,
+            String password, String role, String fullName, String siteCode) {
+        User u = new User();
+        u.setUsername(username);
+        u.setPasswordHash(AuthService.hashPassword(password));
+        u.setRole(role);
+        u.setFullName(fullName);
+        u.setSiteCode(siteCode);
+        u.setActive(true);
+        u.setCreatedAt(LocalDateTime.now());
+        u.setUpdatedAt(LocalDateTime.now());
+        repo.save(u);
+        System.out.println("[Seeder] Created user: " + username);
+    }
+
+    private static void createMerch(MerchandiseRepository repo, String code,
+            String name, String unit, String category) {
+        Merchandise m = new Merchandise();
+        m.setItemCode(code);
+        m.setItemName(name);
+        m.setDefaultUnit(unit);
+        m.setCategory(category);
+        m.setActive(true);
+        m.setCreatedBy("admin");
+        m.setCreatedAt(LocalDateTime.now());
+        m.setUpdatedAt(LocalDateTime.now());
+        repo.save(m);
+        System.out.println("[Seeder] Created merchandise: " + code);
+    }
+
+    private static void createSite(SiteRepository repo, String code, String name,
+            String country, String email, int ship, int air, List<String> catalog) {
+        SiteInfo s = new SiteInfo();
+        s.setSiteCode(code);
+        s.setSiteName(name);
+        s.setCountry(country);
+        s.setContactEmail(email);
+        s.setShipDays(ship);
+        s.setAirDays(air);
+        s.setCatalogItems(catalog);
+        s.setStatus("ACTIVE");
+        s.setUpdatedAt(LocalDateTime.now());
+        repo.save(s);
+        System.out.println("[Seeder] Created site: " + code);
+    }
+}

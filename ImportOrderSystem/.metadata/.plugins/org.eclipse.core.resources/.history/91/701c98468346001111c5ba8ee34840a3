@@ -1,0 +1,186 @@
+package com.importorder.util;
+
+import com.importorder.model.*;
+import com.importorder.repository.*;
+import com.importorder.service.AuthService;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class DataSeeder {
+
+    public static void seed() {
+        UserRepository userRepo = new UserRepository();
+        MerchandiseRepository merchRepo = new MerchandiseRepository();
+        SiteRepository siteRepo = new SiteRepository();
+
+        // Chỉ seed nếu chưa có data
+        if (userRepo.findByUsername("admin") != null) {
+            System.out.println("[Seeder] Data đã tồn tại, bỏ qua.");
+            return;
+        }
+
+        System.out.println("[Seeder] Đang khởi tạo data mẫu...");
+
+        seedUsers(userRepo);
+        seedMerchandise(merchRepo);
+        seedSites(siteRepo);
+
+        System.out.println("[Seeder] Khởi tạo data mẫu thành công!");
+        System.out.println("[Seeder] Tài khoản mặc định - Username: admin / Password: Admin@123");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // USERS  (1 ADMIN · 3 SD · 3 OOD · 2 WM · 6 SITE)
+    // ─────────────────────────────────────────────────────────────────────────
+    private static void seedUsers(UserRepository repo) {
+        // Admin
+        createUser(repo, "admin",      "Admin@123", "ADMIN", "System Administrator", null, true);
+
+        // Bộ phận bán hàng (SD)
+        createUser(repo, "sd_nguyen",  "Admin@123", "SD", "Nguyễn Văn An",    null, true);
+        createUser(repo, "sd_tran",    "Admin@123", "SD", "Trần Thị Bảo",     null, true);
+        createUser(repo, "sd_le",      "Admin@123", "SD", "Lê Minh Châu",     null, false); // bị khóa
+
+        // Đặt hàng quốc tế (OOD)
+        createUser(repo, "ood_pham",   "Admin@123", "OOD", "Phạm Thị Dung",   null, true);
+        createUser(repo, "ood_hoang",  "Admin@123", "OOD", "Hoàng Văn Em",    null, true);
+        createUser(repo, "ood_vu",     "Admin@123", "OOD", "Vũ Thị Phương",   null, true);
+
+        // Quản lý kho (WM)
+        createUser(repo, "wm_do",      "Admin@123", "WM",  "Đỗ Văn Giang",    null, true);
+        createUser(repo, "wm_bui",     "Admin@123", "WM",  "Bùi Thị Hoa",     null, true);
+
+        // Đại diện Site
+        createUser(repo, "site_s01",   "Admin@123", "SITE", "Tanaka Hiroshi",  "S01", true);
+        createUser(repo, "site_s02",   "Admin@123", "SITE", "Kim Ji-won",      "S02", true);
+        createUser(repo, "site_s03",   "Admin@123", "SITE", "Li Wei",          "S03", true);
+        createUser(repo, "site_s04",   "Admin@123", "SITE", "Raj Patel",       "S04", true);
+        createUser(repo, "site_s05",   "Admin@123", "SITE", "Hans Mueller",    "S05", true);
+        createUser(repo, "site_s06",   "Admin@123", "SITE", "Maria Santos",    "S06", false); // bị khóa
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // MERCHANDISE  (25 mặt hàng · 6 danh mục)
+    // ─────────────────────────────────────────────────────────────────────────
+    private static void seedMerchandise(MerchandiseRepository repo) {
+        // Điện tử
+        createMerch(repo, "MH001", "Điện thoại Samsung Galaxy S25 Ultra",  "chiếc", "Điện tử");
+        createMerch(repo, "MH002", "Điện thoại iPhone 16 Pro Max",         "chiếc", "Điện tử");
+        createMerch(repo, "MH003", "Laptop Dell XPS 15 2024",              "chiếc", "Điện tử");
+        createMerch(repo, "MH004", "Laptop Apple MacBook Pro M4",          "chiếc", "Điện tử");
+        createMerch(repo, "MH005", "Màn hình LG UltraWide 34\"",           "chiếc", "Điện tử");
+        createMerch(repo, "MH006", "Máy tính bảng iPad Pro 13\" M4",       "chiếc", "Điện tử");
+
+        // Phụ kiện
+        createMerch(repo, "MH007", "Tai nghe Sony WH-1000XM5",            "chiếc", "Phụ kiện");
+        createMerch(repo, "MH008", "Tai nghe Apple AirPods Pro 3",        "chiếc", "Phụ kiện");
+        createMerch(repo, "MH009", "Đồng hồ Apple Watch Series 10",       "chiếc", "Phụ kiện");
+        createMerch(repo, "MH010", "Đồng hồ Samsung Galaxy Watch 7",      "chiếc", "Phụ kiện");
+        createMerch(repo, "MH011", "Chuột Logitech MX Master 3S",         "chiếc", "Phụ kiện");
+        createMerch(repo, "MH012", "Bàn phím Keychron Q1 Pro",            "chiếc", "Phụ kiện");
+
+        // Máy ảnh & Quay phim
+        createMerch(repo, "MH013", "Máy ảnh Canon EOS R6 Mark II",        "chiếc", "Máy ảnh");
+        createMerch(repo, "MH014", "Máy ảnh Sony Alpha A7 IV",            "chiếc", "Máy ảnh");
+        createMerch(repo, "MH015", "Ống kính Sony FE 24-70mm f/2.8 GM II","chiếc", "Máy ảnh");
+        createMerch(repo, "MH016", "Máy quay GoPro Hero 13 Black",        "chiếc", "Máy ảnh");
+
+        // Thiết bị gia dụng thông minh
+        createMerch(repo, "MH017", "Robot hút bụi Roborock S8 Pro Ultra", "chiếc", "Gia dụng thông minh");
+        createMerch(repo, "MH018", "Nồi chiên không khí Philips XXL 7.2L","chiếc", "Gia dụng thông minh");
+        createMerch(repo, "MH019", "Máy lọc không khí Dyson Purifier Hot+Cool","chiếc", "Gia dụng thông minh");
+        createMerch(repo, "MH020", "Loa thông minh Amazon Echo Show 15",  "chiếc", "Gia dụng thông minh");
+
+        // Linh kiện & Thiết bị mạng
+        createMerch(repo, "MH021", "Bộ phát WiFi 6E ASUS ROG Rapture",    "chiếc", "Thiết bị mạng");
+        createMerch(repo, "MH022", "Switch mạng TP-Link TL-SG1024D",      "chiếc", "Thiết bị mạng");
+        createMerch(repo, "MH023", "Ổ cứng SSD Samsung 990 Pro 2TB",      "chiếc", "Linh kiện");
+        createMerch(repo, "MH024", "RAM Corsair Vengeance DDR5 32GB",      "bộ",    "Linh kiện");
+        createMerch(repo, "MH025", "Card đồ họa NVIDIA RTX 5080",         "chiếc", "Linh kiện");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SITES  (6 nhà cung cấp · 5 quốc gia)
+    // ─────────────────────────────────────────────────────────────────────────
+    private static void seedSites(SiteRepository repo) {
+        // Nhật Bản — điện tử, máy ảnh, phụ kiện cao cấp
+        createSite(repo, "S01", "Tokyo Import Co.", "Japan",
+            "contact@tokyoimport.jp", 14, 3,
+            List.of("MH001", "MH003", "MH007", "MH009", "MH013", "MH014", "MH015"));
+
+        // Hàn Quốc — điện tử Samsung, thiết bị thông minh
+        createSite(repo, "S02", "Seoul Trading Co.", "South Korea",
+            "contact@seoultrade.kr", 10, 2,
+            List.of("MH001", "MH005", "MH010", "MH017", "MH021", "MH023"));
+
+        // Trung Quốc — linh kiện, gia dụng, thiết bị mạng
+        createSite(repo, "S03", "Shanghai Goods Ltd.", "China",
+            "contact@shanghaig.cn", 7, 1,
+            List.of("MH003", "MH011", "MH012", "MH018", "MH022", "MH024", "MH025"));
+
+        // Ấn Độ — thiết bị mạng, linh kiện
+        createSite(repo, "S04", "Mumbai Tech Supplies", "India",
+            "procurement@mumbaitech.in", 12, 4,
+            List.of("MH019", "MH020", "MH021", "MH022", "MH023", "MH024"));
+
+        // Đức — máy ảnh, phụ kiện cao cấp, gia dụng
+        createSite(repo, "S05", "Berlin Quality Imports GmbH", "Germany",
+            "orders@berlinqi.de", 21, 5,
+            List.of("MH002", "MH004", "MH006", "MH008", "MH013", "MH016", "MH019"));
+
+        // Brazil — điện tử Apple, phụ kiện
+        createSite(repo, "S06", "São Paulo Electronics Ltda.", "Brazil",
+            "import@spe.com.br", 30, 7,
+            List.of("MH002", "MH004", "MH006", "MH008", "MH009", "MH016", "MH020"));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────────────
+    private static void createUser(UserRepository repo, String username,
+            String password, String role, String fullName, String siteCode, boolean active) {
+        User u = new User();
+        u.setUsername(username);
+        u.setPasswordHash(AuthService.hashPassword(password));
+        u.setRole(role);
+        u.setFullName(fullName);
+        u.setSiteCode(siteCode);
+        u.setActive(active);
+        u.setCreatedAt(LocalDateTime.now());
+        u.setUpdatedAt(LocalDateTime.now());
+        repo.save(u);
+        System.out.println("[Seeder] Created user: " + username + " (" + role + ")" + (active ? "" : " [LOCKED]"));
+    }
+
+    private static void createMerch(MerchandiseRepository repo, String code,
+            String name, String unit, String category) {
+        Merchandise m = new Merchandise();
+        m.setItemCode(code);
+        m.setItemName(name);
+        m.setDefaultUnit(unit);
+        m.setCategory(category);
+        m.setActive(true);
+        m.setCreatedBy("admin");
+        m.setCreatedAt(LocalDateTime.now());
+        m.setUpdatedAt(LocalDateTime.now());
+        repo.save(m);
+        System.out.println("[Seeder] Created merchandise: " + code + " - " + name);
+    }
+
+    private static void createSite(SiteRepository repo, String code, String name,
+            String country, String email, int ship, int air, List<String> catalog) {
+        SiteInfo s = new SiteInfo();
+        s.setSiteCode(code);
+        s.setSiteName(name);
+        s.setCountry(country);
+        s.setContactEmail(email);
+        s.setShipDays(ship);
+        s.setAirDays(air);
+        s.setCatalogItems(catalog);
+        s.setStatus("ACTIVE");
+        s.setUpdatedAt(LocalDateTime.now());
+        repo.save(s);
+        System.out.println("[Seeder] Created site: " + code + " - " + name + " (" + country + ")");
+    }
+}

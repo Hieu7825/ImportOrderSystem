@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="hasShownOverlayPopupBefore" value="true"/>
+	<section name="java.lang.Class">
+		<list key="findhistory">
+			<item value="20"/>
+			<item value="login"/>
+			<item value="initialize"/>
+			<item value="applyFilter"/>
+			<item value="toFinalOrder"/>
+			<item value="FinalOrderRepository"/>
+			<item value="confirmPlan"/>
+			<item value="updateItem"/>
+			<item value="colActions"/>
+			<item value="colStatus"/>
+			<item value="btnView"/>
+			<item value="btnView.setOnAction"/>
+			<item value="btnView.setStyle"/>
+			<item value="setBatchId"/>
+			<item value="setOnAction"/>
+		</list>
+	</section>
+</section>

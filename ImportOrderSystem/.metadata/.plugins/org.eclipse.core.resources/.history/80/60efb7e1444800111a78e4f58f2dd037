@@ -1,0 +1,196 @@
+package com.importorder.controller.ood;
+
+import com.importorder.model.OrderItem;
+import com.importorder.model.OrderRequest;
+import com.importorder.model.SiteInfo;
+import com.importorder.model.StockInfo;
+import com.importorder.service.OrderOptimizationService;
+import com.importorder.service.OrderRequestService;
+import com.importorder.service.SiteService;
+import com.importorder.service.StockQueryService;
+import com.importorder.util.AlertUtils;
+import com.importorder.util.SessionManager;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.stage.Stage;
+
+import java.net.URL;
+import java.util.*;
+
+public class OOD_SupplyDashboardController implements Initializable {
+
+    @FXML private Label lblUserName;
+    @FXML private Label lblBatchId;
+    @FXML private Label lblTotalItems;
+    @FXML private Label lblTotalSites;
+    @FXML private Label lblShortage;
+    @FXML private Button btnCalculate;
+    @FXML private TableView<ObservableList<String>> tblMatrix;
+    @FXML private TableColumn<ObservableList<String>, String> colItem;
+    @FXML private TableColumn<ObservableList<String>, String> colNeed;
+    @FXML private TableColumn<ObservableList<String>, String> colTotal;
+    @FXML private TableColumn<ObservableList<String>, String> colSiteCount;
+
+    private final OrderOptimizationService optimService = new OrderOptimizationService();
+    private final OrderRequestService orderService = new OrderRequestService();
+    private final SiteService siteService = new SiteService();
+    private final StockQueryService stockQueryService = new StockQueryService();
+
+    private String batchId;
+    private List<SiteInfo> eligibleSites = new ArrayList<>();
+    private final List<String> prioritizedSites = new ArrayList<>();
+    private final List<String> avoidedSites = new ArrayList<>();
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        if (lblUserName != null)
+            lblUserName.setText(SessionManager.getCurrentUser().getFullName());
+    }
+
+   public void setBatchId(String batchId) {
+    this.batchId = batchId;
+    if (lblBatchId != null) lblBatchId.setText("Batch: " + batchId);
+    try {
+        // Chỉ start nếu còn PENDING
+        var req = orderService.getByBatchId(batchId);
+        if (req != null && "PENDING".equals(req.getStatus())) {
+            optimService.startProcessing(batchId);
+        }
+        loadStockMatrix();
+    } catch (Exception e) {
+        AlertUtils.showError("Lỗi", e.getMessage());
+    }
+}
+    private void loadStockMatrix() {
+        OrderRequest req = orderService.getByBatchId(batchId);
+        if (req == null || req.getItems() == null) return;
+
+        // Tìm sites có hàng
+        List<String> itemCodes = req.getItems().stream()
+            .map(OrderItem::getItemCode).toList();
+        eligibleSites = siteService.findActiveByItemCodes(itemCodes);
+
+        // Update summary
+        lblTotalItems.setText(String.valueOf(req.getItems().size()));
+        lblTotalSites.setText(String.valueOf(eligibleSites.size()));
+
+        // Build matrix
+        buildMatrixTable(req, eligibleSites);
+        btnCalculate.setDisable(false);
+    }
+
+    private void buildMatrixTable(OrderRequest req, List<SiteInfo> sites) {
+        // Clear dynamic columns
+        while (tblMatrix.getColumns().size() > 4)
+            tblMatrix.getColumns().remove(4);
+
+        // Add site columns dynamically
+        for (int i = 0; i < sites.size(); i++) {
+            SiteInfo site = sites.get(i);
+            final int colIdx = 4 + i;
+            String header = site.getSiteCode() + "\nship" + site.getShipDays()
+                + "/air" + site.getAirDays();
+
+            TableColumn<ObservableList<String>, String> siteCol = new TableColumn<>(header);
+            siteCol.setPrefWidth(100);
+            final int fi = colIdx;
+            siteCol.setCellValueFactory(c -> {
+                ObservableList<String> row = c.getValue();
+                return new SimpleStringProperty(fi < row.size() ? row.get(fi) : "--");
+            });
+
+            // Click header để toggle prioritized/avoided
+            String siteCode = site.getSiteCode();
+            siteCol.setOnEditStart(null);
+            siteCol.setText(getSiteHeaderText(site));
+
+            tblMatrix.getColumns().add(siteCol);
+        }
+
+        // Build rows
+        ObservableList<ObservableList<String>> rows = FXCollections.observableArrayList();
+        int shortageCount = 0;
+
+        for (OrderItem item : req.getItems()) {
+            ObservableList<String> row = FXCollections.observableArrayList();
+            row.add(item.getItemCode());                          // col 0: item
+            row.add(String.valueOf(item.getQuantityOrdered()));   // col 1: need
+            row.add("--");                                        // col 2: total (sẽ tính)
+            row.add("--");                                        // col 3: site count
+
+            int total = 0;
+            int siteCount = 0;
+
+            for (SiteInfo site : sites) {
+                var stock = stockQueryService.getStock(batchId, site.getSiteCode(), item.getItemCode());
+                if (stock != null && stock.getInStockQty() > 0) {
+                    row.add(String.valueOf(stock.getInStockQty()));
+                    total += stock.getInStockQty();
+                    siteCount++;
+                } else {
+                    row.add("--");
+                }
+            }
+
+            row.set(2, String.valueOf(total));
+            row.set(3, String.valueOf(siteCount));
+
+            if (total < item.getQuantityOrdered()) shortageCount++;
+            rows.add(row);
+        }
+
+        lblShortage.setText(String.valueOf(shortageCount));
+
+        colItem.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(0)));
+        colNeed.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(1)));
+        colTotal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(2)));
+        colSiteCount.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(3)));
+
+        tblMatrix.setItems(rows);
+    }
+
+    private String getSiteHeaderText(SiteInfo site) {
+        String code = site.getSiteCode();
+        String badge = prioritizedSites.contains(code) ? " ★"
+            : avoidedSites.contains(code) ? " ✕" : "";
+        return code + badge + "\nship" + site.getShipDays() + "/air" + site.getAirDays();
+    }
+
+    @FXML
+    private void handleCalculate() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/ood/OOD_OrderGeneration.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            OOD_OrderGenerationController ctrl = loader.getController();
+            ctrl.setBatchData(batchId, prioritizedSites, avoidedSites);
+            Stage stage = (Stage) lblUserName.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    @FXML private void goBack() { navigateTo("/fxml/ood/OOD_OrderRequestList.fxml"); }
+    @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
+
+    private void navigateTo(String path) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) lblUserName.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+}

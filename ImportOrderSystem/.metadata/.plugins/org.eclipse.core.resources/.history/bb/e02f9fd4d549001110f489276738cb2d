@@ -1,0 +1,206 @@
+package com.importorder.controller.ood;
+
+import com.importorder.model.SiteOrder;
+import com.importorder.service.SiteOrderService;
+import com.importorder.util.AlertUtils;
+import com.importorder.util.DateUtils;
+import com.importorder.util.SessionManager;
+import com.importorder.util.PaginationHelper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
+public class OOD_SiteOrderListController implements Initializable {
+
+    @FXML private Label lblUserName;
+    @FXML private ComboBox<String> cmbStatus;
+    @FXML private TableView<SiteOrder> tblOrders;
+    @FXML private TableColumn<SiteOrder, String> colSiteOrderId;
+    @FXML private TableColumn<SiteOrder, String> colBatchId;
+    @FXML private TableColumn<SiteOrder, String> colSite;
+    @FXML private TableColumn<SiteOrder, String> colMeans;
+    @FXML private TableColumn<SiteOrder, String> colArrival;
+    @FXML private TableColumn<SiteOrder, String> colStatus;
+    @FXML private TableColumn<SiteOrder, Void> colActions;
+    @FXML private Label lblPageInfo;
+
+    private PaginationHelper<SiteOrder> pagination;
+    private final SiteOrderService siteOrderService = new SiteOrderService();
+    private List<SiteOrder> allOrders;
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        lblUserName.setText(SessionManager.getCurrentUser().getFullName());
+        cmbStatus.setItems(FXCollections.observableArrayList(
+            "Tất cả", "SENT", "CONFIRMED", "RECEIVED", "DISCREPANCY", "CANCELLED"));
+        cmbStatus.setValue("Tất cả");
+        cmbStatus.setOnAction(e -> applyFilter());
+        setupTable();
+        pagination = new PaginationHelper<>(tblOrders, lblPageInfo);
+        loadData();
+    }
+
+    private void setupTable() {
+        colSiteOrderId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSiteOrderId()));
+        colBatchId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getBatchId()));
+        colSite.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSiteCode()));
+        colMeans.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDeliveryMeans()));
+        colArrival.setCellValueFactory(c -> new SimpleStringProperty(
+            c.getValue().getEstimatedArrival() != null
+                ? DateUtils.formatDate(c.getValue().getEstimatedArrival()) : "--"));
+        colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus()));
+
+        colActions.setCellFactory(col -> new TableCell<>() {
+            final Button btnView       = new Button("Xem");
+            final Button btnEdit       = new Button("Sửa");
+            final Button btnCancel     = new Button("Hủy");
+            final Button btnReplace    = new Button("🔄 Tìm phương án thay thế");
+            final HBox   box           = new HBox(6, btnView, btnEdit, btnCancel, btnReplace);
+            {
+                btnView.setStyle("-fx-background-color: rgba(79,110,247,0.15); -fx-text-fill: #4F6EF7; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btnEdit.setStyle("-fx-background-color: rgba(245,158,11,0.15); -fx-text-fill: #F59E0B; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btnCancel.setStyle("-fx-background-color: rgba(239,68,68,0.15); -fx-text-fill: #EF4444; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btnReplace.setStyle("-fx-background-color: rgba(168,85,247,0.15); -fx-text-fill: #A855F7; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+
+                btnView.setOnAction(e -> {
+                    SiteOrder so = getTableView().getItems().get(getIndex());
+                    goToDetail(so.getSiteOrderId());
+                });
+                btnEdit.setOnAction(e -> {
+                    SiteOrder so = getTableView().getItems().get(getIndex());
+                    goToEdit(so.getSiteOrderId());
+                });
+                btnCancel.setOnAction(e -> {
+                    SiteOrder so = getTableView().getItems().get(getIndex());
+                    handleCancel(so);
+                });
+                btnReplace.setOnAction(e -> {
+                    SiteOrder so = getTableView().getItems().get(getIndex());
+                    goToReplace(so);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) { setGraphic(null); return; }
+                SiteOrder so = getTableView().getItems().get(getIndex());
+                String status = so.getStatus();
+
+                boolean isCancelled = "CANCELLED".equals(status);
+                boolean canCancel   = "SENT".equals(status);
+                boolean canEdit     = "SENT".equals(status) && !so.isConfirmedBySite();
+
+                btnCancel.setVisible(canCancel);
+                btnCancel.setManaged(canCancel);
+                btnEdit.setVisible(canEdit);
+                btnEdit.setManaged(canEdit);
+                btnReplace.setVisible(isCancelled);
+                btnReplace.setManaged(isCancelled);
+
+                setGraphic(box);
+            }
+        });
+    }
+
+    private void loadData() {
+        allOrders = siteOrderService.getAll();
+        applyFilter();
+    }
+
+    private void applyFilter() {
+        String status = cmbStatus.getValue();
+        List<SiteOrder> filtered = allOrders.stream()
+            .filter(o -> "Tất cả".equals(status) || status.equals(o.getStatus()))
+            .collect(Collectors.toList());
+        pagination.setItems(filtered);
+    }
+
+    private void handleCancel(SiteOrder so) {
+        String reason = AlertUtils.showConfirmWithReason("Hủy đơn",
+            "Xác nhận hủy đơn " + so.getSiteOrderId() + "?");
+        if (reason != null) {
+            try {
+                siteOrderService.cancelSiteOrder(so.getSiteOrderId(), reason);
+                loadData();
+            } catch (Exception e) {
+                AlertUtils.showError("Lỗi", e.getMessage());
+            }
+        }
+    }
+
+    private void goToDetail(String siteOrderId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/ood/OOD_SiteOrderDetail.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            OOD_SiteOrderDetailController ctrl = loader.getController();
+            ctrl.setSiteOrderId(siteOrderId);
+            Stage stage = (Stage) tblOrders.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    private void goToEdit(String siteOrderId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/ood/OOD_SiteOrderEdit.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            OOD_SiteOrderEditController ctrl = loader.getController();
+            ctrl.setSiteOrderId(siteOrderId);
+            Stage stage = (Stage) tblOrders.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    private void goToReplace(SiteOrder so) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/ood/OOD_SupplyDashboard.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            OOD_SupplyDashboardController ctrl = loader.getController();
+            ctrl.setBatchId(so.getBatchId());
+            Stage stage = (Stage) tblOrders.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    @FXML private void handlePrevPage()  { pagination.prevPage(); }
+    @FXML private void handleNextPage()  { pagination.nextPage(); }
+    @FXML private void goDashboard()     { navigateTo("/fxml/ood/OOD_Dashboard.fxml"); }
+    @FXML private void goOrderRequests() { navigateTo("/fxml/ood/OOD_OrderRequestList.fxml"); }
+    @FXML private void goSites()         { navigateTo("/fxml/ood/OOD_SiteList.fxml"); }
+    @FXML private void handleLogout()    { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
+
+    private void navigateTo(String path) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) tblOrders.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+}

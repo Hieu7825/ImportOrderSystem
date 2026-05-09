@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.ood.OOD_SiteListController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderRequests"/>
+            <Button text="📦  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goSiteOrders"/>
+            <Button text="⚠  Yêu cầu hủy" styleClass="nav-item" maxWidth="Infinity" onAction="#goCancelRequests"/>
+            <Button text="🏭  Quản lý Site" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ĐẶT HÀNG QUỐC TẾ" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <Label text="Quản lý Site nhập khẩu"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"
+                       HBox.hgrow="ALWAYS"/>
+                <Button text="+ Thêm Site mới" styleClass="btn-primary" onAction="#handleAddSite"/>
+            </HBox>
+            <TableView fx:id="tblSites" styleClass="table-view" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colCode" text="MÃ SITE" prefWidth="100"/>
+                    <TableColumn fx:id="colName" text="TÊN SITE" prefWidth="220"/>
+                    <TableColumn fx:id="colCountry" text="QUỐC GIA" prefWidth="120"/>
+                    <TableColumn fx:id="colShip" text="TÀU (ngày)" prefWidth="100"/>
+                    <TableColumn fx:id="colAir" text="HÀNG KHÔNG (ngày)" prefWidth="150"/>
+                    <TableColumn fx:id="colCatalog" text="SỐ MẶT HÀNG" prefWidth="130"/>
+                    <TableColumn fx:id="colStatus" text="TRẠNG THÁI" prefWidth="120"/>
+                    <TableColumn fx:id="colActions" text="THAO TÁC" prefWidth="160"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có site nào" style="-fx-text-fill: #4A5368;"/>
+                </placeholder>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>
