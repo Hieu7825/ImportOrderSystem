@@ -1,0 +1,39 @@
+package com.importorder;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import com.importorder.util.DataSeeder;
+
+public class Main extends Application {
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+    	// Load fonts để hỗ trợ tiếng Việt
+    	javafx.scene.text.Font.loadFont(
+    		    getClass().getResourceAsStream("/fonts/BeVietnamPro-Regular.ttf"), 14);
+    	javafx.scene.text.Font.loadFont(
+    		    getClass().getResourceAsStream("/fonts/BeVietnamPro-Medium.ttf"), 14);
+    	javafx.scene.text.Font.loadFont(
+    		    getClass().getResourceAsStream("/fonts/BeVietnamPro-Bold.ttf"), 14);
+    	// Auto seed data nếu DB trống
+    	DataSeeder.seed();
+        FXMLLoader loader = new FXMLLoader(
+            getClass().getResource("/fxml/Login.fxml")
+        );
+        Scene scene = new Scene(loader.load(), 1280, 720);
+        scene.getStylesheets().add(
+            getClass().getResource("/css/global.css").toExternalForm()
+        );
+        primaryStage.setTitle("Import Order System");
+        primaryStage.setScene(scene);
+        primaryStage.setMinWidth(1024);
+        primaryStage.setMinHeight(600);
+        primaryStage.show();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}

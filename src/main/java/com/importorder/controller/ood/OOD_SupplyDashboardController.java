@@ -1,0 +1,351 @@
+package com.importorder.controller.ood;
+
+import com.importorder.model.SiteOrder;
+import com.importorder.repository.SiteOrderRepository;
+import com.importorder.model.OrderItem;
+import com.importorder.model.OrderRequest;
+import com.importorder.model.SiteInfo;
+import com.importorder.model.SubBatch;
+import com.importorder.repository.SubBatchRepository;
+import com.importorder.service.OrderOptimizationService;
+import com.importorder.service.OrderRequestService;
+import com.importorder.service.SiteService;
+import com.importorder.service.StockQueryService;
+import com.importorder.util.AlertUtils;
+import com.importorder.util.SessionManager;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.net.URL;
+import java.util.*;
+
+public class OOD_SupplyDashboardController implements Initializable {
+
+    @FXML private Label    lblUserName;
+    @FXML private Label    lblBatchId;
+    @FXML private Label    lblSubBatchInfo;   // ← thêm: hiển thị sub-batch info
+    @FXML private Label    lblTotalItems;
+    @FXML private Label    lblTotalSites;
+    @FXML private Label    lblShortage;
+    @FXML private Label    lblNoStockWarning; // ← thêm: Edge Case B1
+    @FXML private Button   btnCalculate;
+    @FXML private TableView<ObservableList<String>> tblMatrix;
+    @FXML private TableColumn<ObservableList<String>, String> colItem;
+    @FXML private TableColumn<ObservableList<String>, String> colNeed;
+    @FXML private TableColumn<ObservableList<String>, String> colTotal;
+    @FXML private TableColumn<ObservableList<String>, String> colSiteCount;
+    @FXML private FlowPane flowSiteFilter;
+    
+    private final SiteOrderRepository siteOrderRepo = new SiteOrderRepository();
+    private final List<String> excludedSites = new ArrayList<>();
+    private final OrderOptimizationService optimService      = new OrderOptimizationService();
+    private final OrderRequestService      orderService      = new OrderRequestService();
+    private final SiteService              siteService       = new SiteService();
+    private final StockQueryService        stockQueryService = new StockQueryService();
+    private final SubBatchRepository       subBatchRepo      = new SubBatchRepository();
+
+    private String       batchId;
+    private String       subBatchId;   // null = ORIGINAL
+    private List<SiteInfo> eligibleSites     = new ArrayList<>();
+    private final List<String> prioritizedSites = new ArrayList<>();
+    private final List<String> avoidedSites     = new ArrayList<>();
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        if (lblUserName != null)
+            lblUserName.setText(SessionManager.getCurrentUser().getFullName());
+        if (lblNoStockWarning != null) {
+            lblNoStockWarning.setVisible(false);
+            lblNoStockWarning.setManaged(false);
+        }
+    }
+
+    public void setBatchId(String batchId) {
+        this.batchId    = batchId;
+        this.subBatchId = null;
+        if (lblBatchId != null) lblBatchId.setText("Batch: " + batchId);
+        try {
+            var req = orderService.getByBatchId(batchId);
+            if (req != null && "PENDING".equals(req.getStatus())) {
+                optimService.startProcessing(batchId);
+            }
+            loadStockMatrix();
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    /** Gọi khi đến từ luồng thay thế đơn bị hủy */
+    public void setSubBatchId(String subBatchId) {
+        this.subBatchId = subBatchId;
+        excludedSites.clear();
+
+        if (subBatchId != null && lblSubBatchInfo != null) {
+            SubBatch sb = subBatchRepo.findBySubBatchId(subBatchId);
+
+            if (sb != null) {
+                lblSubBatchInfo.setText("🔄 Phương án thay thế — " + subBatchId
+                    + " (thay cho đơn: " + sb.getReplacingOrderId() + ")");
+                lblSubBatchInfo.setVisible(true);
+                lblSubBatchInfo.setManaged(true);
+
+                // Loại site vừa hủy khỏi màn tra cứu tồn kho / lọc site
+                if (sb.getReplacingOrderId() != null) {
+                    SiteOrder cancelledOrder =
+                        siteOrderRepo.findBySiteOrderId(sb.getReplacingOrderId());
+
+                    if (cancelledOrder != null && cancelledOrder.getSiteCode() != null) {
+                        excludedSites.add(cancelledOrder.getSiteCode());
+                    }
+                }
+            }
+        }
+
+        loadStockMatrix();
+    }
+
+    private List<OrderItem> getItemsToProcess() {
+        if (subBatchId != null) {
+            SubBatch sb = subBatchRepo.findBySubBatchId(subBatchId);
+            if (sb != null && sb.getItems() != null) return sb.getItems();
+        }
+        OrderRequest req = orderService.getByBatchId(batchId);
+        return req != null && req.getItems() != null ? req.getItems() : new ArrayList<>();
+    }
+
+    private void loadStockMatrix() {
+        List<OrderItem> items = getItemsToProcess();
+        if (items.isEmpty()) return;
+
+        List<String> itemCodes = items.stream()
+            .map(OrderItem::getItemCode).toList();
+        eligibleSites = siteService.findActiveByItemCodes(itemCodes)
+        	    .stream()
+        	    .filter(site -> !containsSiteCode(excludedSites, site.getSiteCode()))
+        	    .toList();
+
+        lblTotalItems.setText(String.valueOf(items.size()));
+        lblTotalSites.setText(String.valueOf(eligibleSites.size()));
+
+        // Edge Case B1: không có site nào có tồn kho
+        if (eligibleSites.isEmpty()) {
+            if (lblNoStockWarning != null) {
+                lblNoStockWarning.setText(
+                    "⚠ Không có site nào đang kinh doanh các mặt hàng này. "
+                    + "Vui lòng kiểm tra lại danh sách site hoặc liên hệ SITE cập nhật tồn kho.");
+                lblNoStockWarning.setVisible(true);
+                lblNoStockWarning.setManaged(true);
+            }
+            btnCalculate.setDisable(true);
+            return;
+        }
+
+        buildSiteFilterPanel();
+        buildMatrixTable(items, eligibleSites);
+        btnCalculate.setDisable(false);
+    }
+
+    // ── Site filter panel ─────────────────────────────────────────────────────
+
+    private void buildSiteFilterPanel() {
+        if (flowSiteFilter == null) return;
+        flowSiteFilter.getChildren().clear();
+
+        for (SiteInfo site : eligibleSites) {
+            String code = site.getSiteCode();
+            Button btn = new Button(getSiteButtonLabel(code, site));
+            btn.setStyle(getSiteButtonStyle(code));
+            btn.setCursor(javafx.scene.Cursor.HAND);
+
+            btn.setOnAction(e -> {
+                if (prioritizedSites.contains(code)) {
+                    prioritizedSites.remove(code);
+                    avoidedSites.add(code);
+                } else if (avoidedSites.contains(code)) {
+                    avoidedSites.remove(code);
+                } else {
+                    prioritizedSites.add(code);
+                }
+                btn.setText(getSiteButtonLabel(code, site));
+                btn.setStyle(getSiteButtonStyle(code));
+                // Refresh header matrix
+                refreshMatrixHeaders();
+            });
+            flowSiteFilter.getChildren().add(btn);
+        }
+    }
+
+    private String getSiteButtonLabel(String code, SiteInfo site) {
+        String prefix = prioritizedSites.contains(code) ? "★ "
+            : avoidedSites.contains(code) ? "✕ " : "";
+        return prefix + code + " · ship" + site.getShipDays()
+            + "/air" + site.getAirDays();
+    }
+
+    private String getSiteButtonStyle(String code) {
+        if (prioritizedSites.contains(code))
+            return "-fx-background-color: rgba(34,197,94,0.15); -fx-text-fill: #22C55E; " +
+                   "-fx-border-color: #22C55E; -fx-background-radius: 8px; " +
+                   "-fx-border-radius: 8px; -fx-padding: 8 16; -fx-font-size: 13px;";
+        if (avoidedSites.contains(code))
+            return "-fx-background-color: rgba(239,68,68,0.1); -fx-text-fill: #EF4444; " +
+                   "-fx-border-color: #EF4444; -fx-background-radius: 8px; " +
+                   "-fx-border-radius: 8px; -fx-padding: 8 16; -fx-font-size: 13px;";
+        return "-fx-background-color: #1C2030; -fx-text-fill: #8892A8; " +
+               "-fx-border-color: #252A3A; -fx-background-radius: 8px; " +
+               "-fx-border-radius: 8px; -fx-padding: 8 16; -fx-font-size: 13px;";
+    }
+
+    private void refreshMatrixHeaders() {
+        for (int i = 4; i < tblMatrix.getColumns().size(); i++) {
+            SiteInfo site = eligibleSites.get(i - 4);
+            tblMatrix.getColumns().get(i).setText(getSiteHeaderText(site));
+        }
+    }
+
+    // ── Matrix table ──────────────────────────────────────────────────────────
+
+    private void buildMatrixTable(List<OrderItem> items, List<SiteInfo> sites) {
+        while (tblMatrix.getColumns().size() > 4)
+            tblMatrix.getColumns().remove(4);
+
+        for (int i = 0; i < sites.size(); i++) {
+            SiteInfo site = sites.get(i);
+            final int colIdx = 4 + i;
+
+            TableColumn<ObservableList<String>, String> siteCol =
+                new TableColumn<>(getSiteHeaderText(site));
+            siteCol.setPrefWidth(100);
+            siteCol.setCellValueFactory(c -> {
+                ObservableList<String> row = c.getValue();
+                return new SimpleStringProperty(
+                    colIdx < row.size() ? row.get(colIdx) : "--");
+            });
+            tblMatrix.getColumns().add(siteCol);
+        }
+
+        ObservableList<ObservableList<String>> rows = FXCollections.observableArrayList();
+        int shortageCount = 0;
+
+        for (OrderItem item : items) {
+            ObservableList<String> row = FXCollections.observableArrayList();
+            row.add(item.getItemCode());
+            row.add(String.valueOf(item.getQuantityOrdered()));
+            row.add("--");
+            row.add("--");
+
+            int total = 0, siteCount = 0;
+            for (SiteInfo site : sites) {
+                var stock = stockQueryService.getStock(
+                    batchId, site.getSiteCode(), item.getItemCode());
+                if (stock != null && stock.getInStockQty() > 0) {
+                    row.add(String.valueOf(stock.getInStockQty()));
+                    total += stock.getInStockQty();
+                    siteCount++;
+                } else {
+                    row.add("--");
+                }
+            }
+
+            row.set(2, String.valueOf(total));
+            row.set(3, String.valueOf(siteCount));
+
+            // Edge Case B3: highlight dòng có tổng < cần
+            if (total < item.getQuantityOrdered()) {
+                shortageCount++;
+                // Sẽ được highlight bằng row style trong UI
+            }
+            rows.add(row);
+        }
+
+        lblShortage.setText(String.valueOf(shortageCount));
+
+        // Edge Case B1: cảnh báo nếu tất cả site đều = 0
+        boolean allZero = rows.stream().allMatch(r ->
+            r.get(2).equals("0") || r.get(2).equals("--"));
+        if (allZero && lblNoStockWarning != null) {
+            lblNoStockWarning.setText(
+                "⚠ Tất cả site đều báo tồn kho = 0. "
+                + "Vui lòng chờ SITE cập nhật tồn kho hoặc liên hệ trực tiếp.");
+            lblNoStockWarning.setVisible(true);
+            lblNoStockWarning.setManaged(true);
+            btnCalculate.setDisable(true);
+        } else {
+            if (lblNoStockWarning != null) {
+                lblNoStockWarning.setVisible(false);
+                lblNoStockWarning.setManaged(false);
+            }
+            btnCalculate.setDisable(false);
+        }
+
+        colItem.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(0)));
+        colNeed.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(1)));
+        colTotal.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(2)));
+        colSiteCount.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().get(3)));
+
+        tblMatrix.setItems(rows);
+    }
+
+    private String getSiteHeaderText(SiteInfo site) {
+        String code  = site.getSiteCode();
+        String badge = prioritizedSites.contains(code) ? " ★"
+            : avoidedSites.contains(code) ? " ✕" : "";
+        return code + badge + "\nship" + site.getShipDays()
+            + "/air" + site.getAirDays();
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+
+    @FXML
+    private void handleCalculate() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/ood/OOD_OrderGeneration.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            OOD_OrderGenerationController ctrl = loader.getController();
+            ctrl.setBatchData(batchId, subBatchId, prioritizedSites, avoidedSites);
+            Stage stage = (Stage) lblUserName.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    @FXML private void goBack()       { navigateTo("/fxml/ood/OOD_OrderRequestList.fxml"); }
+    @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
+
+    private void navigateTo(String path) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) lblUserName.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+    
+    private boolean containsSiteCode(List<String> list, String siteCode) {
+        if (list == null || siteCode == null) return false;
+
+        String target = siteCode.trim();
+
+        return list.stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .anyMatch(code -> code.equalsIgnoreCase(target));
+    }
+}

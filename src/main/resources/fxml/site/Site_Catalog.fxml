@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.site.Site_CatalogController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="ℹ  Thông tin site" styleClass="nav-item" maxWidth="Infinity" onAction="#goProfile"/>
+            <Button text="📋  Mặt hàng KD" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <Button text="📦  Tồn kho" styleClass="nav-item" maxWidth="Infinity" onAction="#goStock"/>
+            <Button text="🛒  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrders"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label fx:id="lblSiteCode" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <Label text="Mặt hàng kinh doanh"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"
+                       HBox.hgrow="ALWAYS"/>
+                <Button text="+ Thêm mặt hàng" styleClass="btn-primary" onAction="#handleAdd"/>
+            </HBox>
+            <Label fx:id="lblInfo" style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+            <TableView fx:id="tblCatalog" styleClass="table-view" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colCode" text="MÃ HÀNG" prefWidth="150"/>
+                    <TableColumn fx:id="colName" text="TÊN HÀNG" prefWidth="350"/>
+                    <TableColumn fx:id="colUnit" text="ĐƠN VỊ" prefWidth="120"/>
+                    <TableColumn fx:id="colDel" text="" prefWidth="80"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có mặt hàng nào trong danh sách kinh doanh"
+                           style="-fx-text-fill: #4A5368;"/>
+                </placeholder>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>
