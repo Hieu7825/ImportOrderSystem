@@ -4,7 +4,7 @@
 <?import javafx.geometry.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.importorder.controller.ood.OOD_SupplyDashboardController"
+            fx:controller="com.importorder.uc4_create_request.OOD_SupplyDashboardController"
             stylesheets="@../../css/global.css"
             style="-fx-background-color: #0D0F14;">
     <left>

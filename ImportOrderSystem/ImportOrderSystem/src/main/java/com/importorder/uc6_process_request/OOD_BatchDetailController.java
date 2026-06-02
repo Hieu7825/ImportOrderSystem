@@ -1,4 +1,4 @@
-package com.importorder.controller.ood;
+package com.importorder.uc6_process_request;
 
 import com.importorder.model.OrderItem;
 import com.importorder.model.OrderRequest;
@@ -24,22 +24,16 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
-/**
- * Màn hình chi tiết Batch lớn:
- * - Thông tin chung (SD tạo, ngày tạo, danh sách mặt hàng gốc)
- * - Lịch sử xử lý: danh sách sub-batch (ORIGINAL + REPLACEMENT)
- * - Với mỗi sub-batch: danh sách đơn hàng tương ứng
- */
 public class OOD_BatchDetailController implements Initializable {
 
-    // ── Header ────────────────────────────────────────────────────────────────
+    // ── Header ─────────────────────────────────────────────────────────────────
     @FXML private Label lblUserName;
     @FXML private Label lblBatchId;
     @FXML private Label lblCreatedBy;
     @FXML private Label lblCreatedAt;
     @FXML private Label lblDisplayStatus;
 
-    // ── Mặt hàng gốc ─────────────────────────────────────────────────────────
+    // ── Mặt hàng gốc ──────────────────────────────────────────────────────────
     @FXML private TableView<OrderItem> tblOriginalItems;
     @FXML private TableColumn<OrderItem, String> colItemCode;
     @FXML private TableColumn<OrderItem, String> colItemName;
@@ -47,12 +41,12 @@ public class OOD_BatchDetailController implements Initializable {
     @FXML private TableColumn<OrderItem, String> colUnit;
     @FXML private TableColumn<OrderItem, String> colDate;
 
-    // ── Lịch sử sub-batch ────────────────────────────────────────────────────
-    @FXML private VBox vboxSubBatches;   // container động — thêm accordion mỗi sub-batch
+    // ── Lịch sử sub-batch ─────────────────────────────────────────────────────
+    @FXML private VBox vboxSubBatches;
 
-    private final OrderRequestService orderService    = new OrderRequestService();
+    private final OrderRequestService orderService     = new OrderRequestService();
     private final SiteOrderService    siteOrderService = new SiteOrderService();
-    private final SubBatchRepository  subBatchRepo    = new SubBatchRepository();
+    private final SubBatchRepository  subBatchRepo     = new SubBatchRepository();
 
     private String batchId;
 
@@ -86,12 +80,10 @@ public class OOD_BatchDetailController implements Initializable {
         OrderRequest req = orderService.getByBatchId(batchId);
         if (req == null) return;
 
-        // Header
         lblBatchId.setText(req.getBatchId());
         lblCreatedBy.setText(req.getCreatedBy());
         lblCreatedAt.setText(DateUtils.formatDateTime(req.getCreatedAt()));
 
-        // displayStatus = status của sub-batch mới nhất
         String ds = req.getDisplayStatus();
         lblDisplayStatus.setText(ds);
         lblDisplayStatus.setStyle(switch (ds != null ? ds : "") {
@@ -102,12 +94,10 @@ public class OOD_BatchDetailController implements Initializable {
             default           -> "-fx-text-fill: #8892A8;";
         });
 
-        // Mặt hàng gốc
         if (req.getItems() != null)
             tblOriginalItems.setItems(
                 FXCollections.observableArrayList(req.getItems()));
 
-        // Sub-batch history
         buildSubBatchHistory(req.getSubBatches());
     }
 
@@ -123,13 +113,11 @@ public class OOD_BatchDetailController implements Initializable {
         }
 
         for (SubBatch sb : subBatches) {
-            // Card mỗi sub-batch
             VBox card = new VBox(8);
             card.setStyle(
                 "-fx-background-color: #13161E; -fx-border-color: #252A3A; " +
                 "-fx-border-radius: 8px; -fx-background-radius: 8px; -fx-padding: 12;");
 
-            // Header sub-batch
             String typeLabel = "ORIGINAL".equals(sb.getType())
                 ? "📋 Lần xử lý gốc" : "🔄 Phương án thay thế";
             String replacingInfo = sb.getReplacingOrderId() != null
@@ -156,7 +144,6 @@ public class OOD_BatchDetailController implements Initializable {
 
             card.getChildren().addAll(subHeader, subStatus, subCreated);
 
-            // Đơn hàng trong sub-batch
             List<SiteOrder> orders = siteOrderService.getBySubBatch(sb.getSubBatchId());
             if (!orders.isEmpty()) {
                 TableView<SiteOrder> tblOrders = buildOrdersTable(orders);
@@ -167,7 +154,6 @@ public class OOD_BatchDetailController implements Initializable {
                 card.getChildren().add(noOrders);
             }
 
-            // Nút xử lý nếu sub-batch đang PROCESSING
             if ("PROCESSING".equals(sb.getStatus())) {
                 Button btnContinue = new Button("▶ Tiếp tục xử lý sub-batch này");
                 btnContinue.setStyle(
@@ -215,7 +201,6 @@ public class OOD_BatchDetailController implements Initializable {
         cStatus.setCellValueFactory(c ->
             new SimpleStringProperty(c.getValue().getStatus()));
 
-        // Nút xem chi tiết
         TableColumn<SiteOrder, Void> cAction = new TableColumn<>("");
         cAction.setPrefWidth(80);
         cAction.setCellFactory(col -> new TableCell<>() {
@@ -248,7 +233,8 @@ public class OOD_BatchDetailController implements Initializable {
             Scene scene = new Scene(loader.load(), 1280, 720);
             scene.getStylesheets().add(
                 getClass().getResource("/css/global.css").toExternalForm());
-            OOD_SupplyDashboardController ctrl = loader.getController();
+            com.importorder.uc4_create_request.OOD_SupplyDashboardController ctrl =
+                loader.getController();
             ctrl.setBatchId(parentBatchId);
             ctrl.setSubBatchId(subBatchId);
             Stage stage = (Stage) lblUserName.getScene().getWindow();
@@ -265,7 +251,8 @@ public class OOD_BatchDetailController implements Initializable {
             Scene scene = new Scene(loader.load(), 1280, 720);
             scene.getStylesheets().add(
                 getClass().getResource("/css/global.css").toExternalForm());
-            OOD_SiteOrderDetailController ctrl = loader.getController();
+            com.importorder.uc2_edit_order.OOD_SiteOrderDetailController ctrl =
+                loader.getController();
             ctrl.setSiteOrderId(siteOrderId);
             Stage stage = (Stage) lblUserName.getScene().getWindow();
             stage.setScene(scene);

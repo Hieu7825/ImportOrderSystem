@@ -157,7 +157,7 @@ public class OrderOptimizationService {
         };
 
         for (int v = 0; v < 4; v++) {
-            Map<String, Object> plan = computePlan(req, items, prioritized, avoided, v);
+        	Map<String, Object> plan = computePlan(req, items, prioritized, avoided, v, subBatchId);
             if (plan != null) {
                 plan.put("label",    labels[v]);
                 plan.put("batchId",  batchId);
@@ -235,60 +235,100 @@ public class OrderOptimizationService {
     // INTERNAL: Tính 1 phương án
     // =========================================================
     private Map<String, Object> computePlan(OrderRequest req,
-                                             List<OrderItem> items,
-                                             List<String> prioritized,
-                                             List<String> avoided,
-                                             int variant) {
+            								List<OrderItem> items,
+            								List<String> prioritized,
+            								List<String> avoided,
+            								int variant,
+            								String subBatchId) {
         Map<String, Map<String, Object>> siteAllocMap  = new LinkedHashMap<>();
         List<Map<String, Object>>        insufficients = new ArrayList<>();
+        List<String> excludedSites = new ArrayList<>();
+
+        if (subBatchId != null) {
+            SubBatch sb = subBatchRepo.findBySubBatchId(subBatchId);
+
+            if (sb != null && sb.getReplacingOrderId() != null) {
+                SiteOrder cancelledOrder = siteOrderRepo.findBySiteOrderId(sb.getReplacingOrderId());
+
+                if (cancelledOrder != null && cancelledOrder.getSiteCode() != null) {
+                    excludedSites.add(cancelledOrder.getSiteCode());
+                }
+            }
+        }
 
         for (OrderItem item : items) {
             if (item.getDesiredDeliveryDate() == null) continue;
             long daysLeft = ChronoUnit.DAYS.between(
-                LocalDate.now(), item.getDesiredDeliveryDate());
+            	    LocalDate.now(), item.getDesiredDeliveryDate());
 
-            List<StockInfo> stocks = stockRepo
-                .findByBatchAndItem(req.getBatchId(), item.getItemCode())
-                .stream()
-                .filter(s -> s.getInStockQty() > 0)
-                .filter(s -> !avoided.contains(s.getSiteCode()))
-                .filter(s -> {
-                    SiteInfo site = siteRepo.findByCode(s.getSiteCode());
-                    if (site == null || !site.isReadyForOrder()) return false;
-                    return site.getShipDays() <= daysLeft || site.getAirDays() <= daysLeft;
-                })
-                .collect(Collectors.toList());
+            List<StockInfo> allStockForItem = stockRepo
+            	    .findByBatchAndItem(req.getBatchId(), item.getItemCode())
+            	    .stream()
+            	    .filter(s -> s.getInStockQty() > 0)
+            	    .filter(s -> !containsSiteCode(excludedSites, s.getSiteCode()))
+            	    .collect(Collectors.toList());
 
-            // Edge Case B3: site avoided là site duy nhất có hàng
-            // → vẫn hiển thị nhưng xếp cuối + đánh dấu cảnh báo
-            if (stocks.isEmpty()) {
-                List<StockInfo> avoidedStocks = stockRepo
-                    .findByBatchAndItem(req.getBatchId(), item.getItemCode())
-                    .stream()
-                    .filter(s -> s.getInStockQty() > 0)
-                    .filter(s -> avoided.contains(s.getSiteCode()))
-                    .filter(s -> {
-                        SiteInfo site = siteRepo.findByCode(s.getSiteCode());
-                        if (site == null || !site.isReadyForOrder()) return false;
-                        return site.getShipDays() <= daysLeft || site.getAirDays() <= daysLeft;
-                    })
-                    .collect(Collectors.toList());
+            	if (allStockForItem.isEmpty()) {
+            	    insufficients.add(buildInsufficient(item, "NO_STOCK", 0));
+            	    continue;
+            	}
 
-                if (!avoidedStocks.isEmpty()) {
-                    // Có hàng nhưng toàn là site avoided → cảnh báo đặc biệt
-                    Map<String, Object> err = buildInsufficient(
-                        item, "ONLY_AVOIDED_SITES_AVAILABLE",
-                        avoidedStocks.stream().mapToInt(StockInfo::getInStockQty).sum());
-                    err.put("avoidedSites", avoidedStocks.stream()
-                        .map(StockInfo::getSiteCode).collect(Collectors.toList()));
-                    insufficients.add(err);
-                    // Dùng avoided stocks nhưng xếp cuối
-                    stocks = avoidedStocks;
-                } else {
-                    insufficients.add(buildInsufficient(item, "NO_ELIGIBLE_SITE", 0));
-                    continue;
-                }
-            }
+            	// Stock đủ điều kiện về site active/ready + deadline
+            	List<StockInfo> eligibleStock = allStockForItem.stream()
+            	    .filter(s -> {
+            	        SiteInfo site = siteRepo.findByCode(s.getSiteCode());
+            	        if (site == null || !site.isReadyForOrder()) return false;
+            	        return site.getShipDays() <= daysLeft || site.getAirDays() <= daysLeft;
+            	    })
+            	    .collect(Collectors.toList());
+
+            	if (eligibleStock.isEmpty()) {
+            	    boolean hasReadySite = allStockForItem.stream().anyMatch(s -> {
+            	        SiteInfo site = siteRepo.findByCode(s.getSiteCode());
+            	        return site != null && site.isReadyForOrder();
+            	    });
+
+            	    if (!hasReadySite) {
+            	        insufficients.add(buildInsufficient(item, "SITE_NOT_READY",
+            	            allStockForItem.stream().mapToInt(StockInfo::getInStockQty).sum()));
+            	    } else {
+            	        insufficients.add(buildInsufficient(item, "DELIVERY_DEADLINE_TOO_SOON",
+            	            allStockForItem.stream().mapToInt(StockInfo::getInStockQty).sum()));
+            	    }
+            	    continue;
+            	}
+
+            	// Tách stock thường và stock bị đánh dấu tránh
+            	List<StockInfo> normalStocks = eligibleStock.stream()
+            	    .filter(s -> !containsSiteCode(avoided, s.getSiteCode()))
+            	    .collect(Collectors.toList());
+
+            	List<StockInfo> avoidedStocks = eligibleStock.stream()
+            	    .filter(s -> containsSiteCode(avoided, s.getSiteCode()))
+            	    .collect(Collectors.toList());
+
+            	List<StockInfo> stocks;
+
+            	if (!normalStocks.isEmpty()) {
+            	    stocks = normalStocks;
+            	} else if (!avoidedStocks.isEmpty()) {
+            	    Map<String, Object> err = buildInsufficient(
+            	        item,
+            	        "ONLY_AVOIDED_SITES_AVAILABLE",
+            	        avoidedStocks.stream().mapToInt(StockInfo::getInStockQty).sum()
+            	    );
+
+            	    err.put("avoidedSites", avoidedStocks.stream()
+            	        .map(StockInfo::getSiteCode)
+            	        .collect(Collectors.toList()));
+
+            	    insufficients.add(err);
+            	    stocks = avoidedStocks;
+            	} else {
+            	    insufficients.add(buildInsufficient(item, "NO_ELIGIBLE_SITE",
+            	        allStockForItem.stream().mapToInt(StockInfo::getInStockQty).sum()));
+            	    continue;
+            	}
 
             stocks.sort(buildComparator(prioritized, daysLeft, variant));
 
@@ -422,5 +462,16 @@ public class OrderOptimizationService {
         err.put("reason",         reason);
         err.put("totalAvailable", available);
         return err;
+    }
+    
+    private boolean containsSiteCode(List<String> list, String siteCode) {
+        if (list == null || siteCode == null) return false;
+
+        String target = siteCode.trim();
+
+        return list.stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .anyMatch(code -> code.equalsIgnoreCase(target));
     }
 }

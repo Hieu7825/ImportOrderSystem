@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.importorder.controller.ood.OOD_SiteOrderEditController"
+            fx:controller="com.importorder.uc2_edit_order.OOD_SiteOrderEditController"
             stylesheets="@../../css/global.css"
             style="-fx-background-color: #0D0F14;">
     <left>

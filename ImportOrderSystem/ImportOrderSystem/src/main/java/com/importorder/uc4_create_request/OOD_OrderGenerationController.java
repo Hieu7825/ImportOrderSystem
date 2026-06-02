@@ -1,4 +1,4 @@
-package com.importorder.controller.ood;
+package com.importorder.uc4_create_request;
 
 import com.importorder.service.OrderOptimizationService;
 import com.importorder.util.AlertUtils;
@@ -21,7 +21,7 @@ public class OOD_OrderGenerationController implements Initializable {
 
     @FXML private Label  lblUserName;
     @FXML private Label  lblBatchId;
-    @FXML private Label  lblSubBatchInfo;   // ← thêm: hiện thông tin sub-batch
+    @FXML private Label  lblSubBatchInfo;
     @FXML private Label  lblPlanIndex;
     @FXML private Label  lblPlanLabel;
     @FXML private VBox   vboxWarning;
@@ -35,9 +35,9 @@ public class OOD_OrderGenerationController implements Initializable {
 
     private final OrderOptimizationService optimService = new OrderOptimizationService();
     private String       batchId;
-    private String       subBatchId;   // null = ORIGINAL
-    private List<String> prioritized   = new ArrayList<>();
-    private List<String> avoided       = new ArrayList<>();
+    private String       subBatchId;
+    private List<String> prioritized = new ArrayList<>();
+    private List<String> avoided     = new ArrayList<>();
     private List<Map<String, Object>> allPlans = new ArrayList<>();
     private int currentPlanIndex = 0;
 
@@ -56,8 +56,8 @@ public class OOD_OrderGenerationController implements Initializable {
     /** Gọi từ SupplyDashboard (REPLACEMENT) */
     public void setBatchData(String batchId, String subBatchId,
                               List<String> prioritized, List<String> avoided) {
-        this.batchId    = batchId;
-        this.subBatchId = subBatchId;
+        this.batchId     = batchId;
+        this.subBatchId  = subBatchId;
         this.prioritized = prioritized;
         this.avoided     = avoided;
 
@@ -135,7 +135,7 @@ public class OOD_OrderGenerationController implements Initializable {
         tblSiteOrders.setItems(FXCollections.observableArrayList(
             siteOrders != null ? siteOrders : new ArrayList<>()));
 
-        // Insufficient items warning — Edge Case B3: bổ sung thông tin về avoided site
+        // Edge Case B3: cảnh báo insufficient items
         List<Map<String, Object>> insufficient =
             (List<Map<String, Object>>) plan.get("insufficientItems");
         if (insufficient != null && !insufficient.isEmpty()) {
@@ -144,7 +144,6 @@ public class OOD_OrderGenerationController implements Initializable {
             String text = insufficient.stream()
                 .map(i -> {
                     String line = "• " + i.get("itemCode") + ": " + i.get("reason");
-                    // Edge Case B3: thêm cảnh báo site avoided
                     if ("ONLY_AVOIDED_SITES_AVAILABLE".equals(i.get("reason"))) {
                         line += " (Site bị đánh ✕ là nguồn duy nhất: "
                             + i.get("avoidedSites") + ")";

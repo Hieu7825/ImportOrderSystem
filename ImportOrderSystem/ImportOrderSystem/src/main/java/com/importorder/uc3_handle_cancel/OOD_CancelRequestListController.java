@@ -1,4 +1,4 @@
-package com.importorder.controller.ood;
+package com.importorder.uc3_handle_cancel;
 
 import com.importorder.model.SiteOrder;
 import com.importorder.service.SiteOrderService;
@@ -25,7 +25,7 @@ public class OOD_CancelRequestListController implements Initializable {
     @FXML private TableView<SiteOrder> tblCancelReqs;
     @FXML private TableColumn<SiteOrder, String> colSiteOrderId;
     @FXML private TableColumn<SiteOrder, String> colSite;
-    @FXML private TableColumn<SiteOrder, String> colArrival;   // ← thêm: ngày nhận để sort ưu tiên
+    @FXML private TableColumn<SiteOrder, String> colArrival;
     @FXML private TableColumn<SiteOrder, String> colReason;
     @FXML private TableColumn<SiteOrder, String> colRequestedAt;
     @FXML private TableColumn<SiteOrder, Void>   colActions;
@@ -46,8 +46,7 @@ public class OOD_CancelRequestListController implements Initializable {
             new SimpleStringProperty(c.getValue().getSiteCode()));
         colArrival.setCellValueFactory(c ->
             new SimpleStringProperty(c.getValue().getEstimatedArrival() != null
-                ? DateUtils.formatDate(c.getValue().getEstimatedArrival())
-                : "--"));
+                ? DateUtils.formatDate(c.getValue().getEstimatedArrival()) : "--"));
         colReason.setCellValueFactory(c ->
             new SimpleStringProperty(c.getValue().getCancelRequestReason()));
         colRequestedAt.setCellValueFactory(c ->

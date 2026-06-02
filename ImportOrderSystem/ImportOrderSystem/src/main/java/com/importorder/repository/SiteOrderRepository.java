@@ -83,10 +83,15 @@ public class SiteOrderRepository {
 
     /** Đơn có yêu cầu hủy từ SITE chờ OOD duyệt */
     public List<SiteOrder> findCancelRequests() {
-        List<SiteOrder> list = new ArrayList<>();
+    	List<SiteOrder> list = new ArrayList<>();
+
         for (Document doc : collection.find(
-                Filters.exists("cancelRequestedAt")))
+                Filters.and(
+                    Filters.exists("cancelRequestedAt"),
+                    Filters.ne("status", "CANCELLED")
+                ))) {
             list.add(toSiteOrder(doc));
+        }
         // Sắp xếp: đơn có estimatedArrival gần nhất lên trước (Edge Case C4)
         list.sort((a, b) -> {
             if (a.getEstimatedArrival() == null) return 1;
@@ -140,10 +145,19 @@ public class SiteOrderRepository {
 
     public void approveCancel(String siteOrderId, String approvedBy) {
         collection.updateOne(
-            Filters.eq("siteOrderId", siteOrderId),
+            Filters.and(
+                Filters.eq("siteOrderId", siteOrderId),
+                Filters.exists("cancelRequestedAt"),
+                Filters.ne("status", "CANCELLED")
+            ),
             Updates.combine(
-                Updates.set("status",          "CANCELLED"),
-                Updates.set("cancelApprovedBy",approvedBy)
+                Updates.set("status", "CANCELLED"),
+                Updates.set("cancelApprovedBy", approvedBy),
+                Updates.set("cancelApprovedAt", LocalDateTime.now().toString()),
+
+                // Xóa request đang chờ để không hiện lại ở danh sách
+                Updates.unset("cancelRequestedAt"),
+                Updates.unset("cancelRequestReason")
             )
         );
     }

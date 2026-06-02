@@ -1,5 +1,7 @@
-package com.importorder.controller.ood;
+package com.importorder.uc4_create_request;
 
+import com.importorder.model.SiteOrder;
+import com.importorder.repository.SiteOrderRepository;
 import com.importorder.model.OrderItem;
 import com.importorder.model.OrderRequest;
 import com.importorder.model.SiteInfo;
@@ -30,11 +32,11 @@ public class OOD_SupplyDashboardController implements Initializable {
 
     @FXML private Label    lblUserName;
     @FXML private Label    lblBatchId;
-    @FXML private Label    lblSubBatchInfo;   // ← thêm: hiển thị sub-batch info
+    @FXML private Label    lblSubBatchInfo;
     @FXML private Label    lblTotalItems;
     @FXML private Label    lblTotalSites;
     @FXML private Label    lblShortage;
-    @FXML private Label    lblNoStockWarning; // ← thêm: Edge Case B1
+    @FXML private Label    lblNoStockWarning;
     @FXML private Button   btnCalculate;
     @FXML private TableView<ObservableList<String>> tblMatrix;
     @FXML private TableColumn<ObservableList<String>, String> colItem;
@@ -43,15 +45,17 @@ public class OOD_SupplyDashboardController implements Initializable {
     @FXML private TableColumn<ObservableList<String>, String> colSiteCount;
     @FXML private FlowPane flowSiteFilter;
 
-    private final OrderOptimizationService optimService      = new OrderOptimizationService();
-    private final OrderRequestService      orderService      = new OrderRequestService();
-    private final SiteService              siteService       = new SiteService();
-    private final StockQueryService        stockQueryService = new StockQueryService();
-    private final SubBatchRepository       subBatchRepo      = new SubBatchRepository();
+    private final SiteOrderRepository  siteOrderRepo     = new SiteOrderRepository();
+    private final List<String>         excludedSites     = new ArrayList<>();
+    private final OrderOptimizationService optimService  = new OrderOptimizationService();
+    private final OrderRequestService      orderService  = new OrderRequestService();
+    private final SiteService              siteService   = new SiteService();
+    private final StockQueryService    stockQueryService = new StockQueryService();
+    private final SubBatchRepository   subBatchRepo      = new SubBatchRepository();
 
     private String       batchId;
-    private String       subBatchId;   // null = ORIGINAL
-    private List<SiteInfo> eligibleSites     = new ArrayList<>();
+    private String       subBatchId;
+    private List<SiteInfo> eligibleSites       = new ArrayList<>();
     private final List<String> prioritizedSites = new ArrayList<>();
     private final List<String> avoidedSites     = new ArrayList<>();
 
@@ -80,9 +84,10 @@ public class OOD_SupplyDashboardController implements Initializable {
         }
     }
 
-    /** Gọi khi đến từ luồng thay thế đơn bị hủy */
     public void setSubBatchId(String subBatchId) {
         this.subBatchId = subBatchId;
+        excludedSites.clear();
+
         if (subBatchId != null && lblSubBatchInfo != null) {
             SubBatch sb = subBatchRepo.findBySubBatchId(subBatchId);
             if (sb != null) {
@@ -90,6 +95,14 @@ public class OOD_SupplyDashboardController implements Initializable {
                     + " (thay cho đơn: " + sb.getReplacingOrderId() + ")");
                 lblSubBatchInfo.setVisible(true);
                 lblSubBatchInfo.setManaged(true);
+
+                if (sb.getReplacingOrderId() != null) {
+                    SiteOrder cancelledOrder =
+                        siteOrderRepo.findBySiteOrderId(sb.getReplacingOrderId());
+                    if (cancelledOrder != null && cancelledOrder.getSiteCode() != null) {
+                        excludedSites.add(cancelledOrder.getSiteCode());
+                    }
+                }
             }
         }
         loadStockMatrix();
@@ -108,14 +121,15 @@ public class OOD_SupplyDashboardController implements Initializable {
         List<OrderItem> items = getItemsToProcess();
         if (items.isEmpty()) return;
 
-        List<String> itemCodes = items.stream()
-            .map(OrderItem::getItemCode).toList();
-        eligibleSites = siteService.findActiveByItemCodes(itemCodes);
+        List<String> itemCodes = items.stream().map(OrderItem::getItemCode).toList();
+        eligibleSites = siteService.findActiveByItemCodes(itemCodes)
+            .stream()
+            .filter(site -> !containsSiteCode(excludedSites, site.getSiteCode()))
+            .toList();
 
         lblTotalItems.setText(String.valueOf(items.size()));
         lblTotalSites.setText(String.valueOf(eligibleSites.size()));
 
-        // Edge Case B1: không có site nào có tồn kho
         if (eligibleSites.isEmpty()) {
             if (lblNoStockWarning != null) {
                 lblNoStockWarning.setText(
@@ -133,7 +147,7 @@ public class OOD_SupplyDashboardController implements Initializable {
         btnCalculate.setDisable(false);
     }
 
-    // ── Site filter panel ─────────────────────────────────────────────────────
+    // ── Site filter panel ──────────────────────────────────────────────────────
 
     private void buildSiteFilterPanel() {
         if (flowSiteFilter == null) return;
@@ -156,7 +170,6 @@ public class OOD_SupplyDashboardController implements Initializable {
                 }
                 btn.setText(getSiteButtonLabel(code, site));
                 btn.setStyle(getSiteButtonStyle(code));
-                // Refresh header matrix
                 refreshMatrixHeaders();
             });
             flowSiteFilter.getChildren().add(btn);
@@ -166,8 +179,7 @@ public class OOD_SupplyDashboardController implements Initializable {
     private String getSiteButtonLabel(String code, SiteInfo site) {
         String prefix = prioritizedSites.contains(code) ? "★ "
             : avoidedSites.contains(code) ? "✕ " : "";
-        return prefix + code + " · ship" + site.getShipDays()
-            + "/air" + site.getAirDays();
+        return prefix + code + " · ship" + site.getShipDays() + "/air" + site.getAirDays();
     }
 
     private String getSiteButtonStyle(String code) {
@@ -191,7 +203,7 @@ public class OOD_SupplyDashboardController implements Initializable {
         }
     }
 
-    // ── Matrix table ──────────────────────────────────────────────────────────
+    // ── Matrix table ───────────────────────────────────────────────────────────
 
     private void buildMatrixTable(List<OrderItem> items, List<SiteInfo> sites) {
         while (tblMatrix.getColumns().size() > 4)
@@ -238,17 +250,12 @@ public class OOD_SupplyDashboardController implements Initializable {
             row.set(2, String.valueOf(total));
             row.set(3, String.valueOf(siteCount));
 
-            // Edge Case B3: highlight dòng có tổng < cần
-            if (total < item.getQuantityOrdered()) {
-                shortageCount++;
-                // Sẽ được highlight bằng row style trong UI
-            }
+            if (total < item.getQuantityOrdered()) shortageCount++;
             rows.add(row);
         }
 
         lblShortage.setText(String.valueOf(shortageCount));
 
-        // Edge Case B1: cảnh báo nếu tất cả site đều = 0
         boolean allZero = rows.stream().allMatch(r ->
             r.get(2).equals("0") || r.get(2).equals("--"));
         if (allZero && lblNoStockWarning != null) {
@@ -278,11 +285,10 @@ public class OOD_SupplyDashboardController implements Initializable {
         String code  = site.getSiteCode();
         String badge = prioritizedSites.contains(code) ? " ★"
             : avoidedSites.contains(code) ? " ✕" : "";
-        return code + badge + "\nship" + site.getShipDays()
-            + "/air" + site.getAirDays();
+        return code + badge + "\nship" + site.getShipDays() + "/air" + site.getAirDays();
     }
 
-    // ── Actions ───────────────────────────────────────────────────────────────
+    // ── Actions ────────────────────────────────────────────────────────────────
 
     @FXML
     private void handleCalculate() {
@@ -315,5 +321,14 @@ public class OOD_SupplyDashboardController implements Initializable {
         } catch (Exception e) {
             AlertUtils.showError("Lỗi", e.getMessage());
         }
+    }
+
+    private boolean containsSiteCode(List<String> list, String siteCode) {
+        if (list == null || siteCode == null) return false;
+        String target = siteCode.trim();
+        return list.stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .anyMatch(code -> code.equalsIgnoreCase(target));
     }
 }

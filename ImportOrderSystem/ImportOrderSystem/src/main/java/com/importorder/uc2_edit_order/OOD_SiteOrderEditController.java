@@ -1,4 +1,4 @@
-package com.importorder.controller.ood;
+package com.importorder.uc2_edit_order;
 
 import com.importorder.model.SiteInfo;
 import com.importorder.model.SiteOrder;
@@ -50,7 +50,6 @@ public class OOD_SiteOrderEditController implements Initializable {
         lblSite.setText(currentOrder.getSiteCode());
         cmbMeans.setValue(currentOrder.getDeliveryMeans());
 
-        // Validate điều kiện sửa
         if (currentOrder.isConfirmedBySite()) {
             showError("Site đã xác nhận đơn này, không thể sửa.");
             cmbMeans.setDisable(true);
@@ -69,7 +68,6 @@ public class OOD_SiteOrderEditController implements Initializable {
         lblArrivalPreview.setText("Dự kiến về: " + DateUtils.formatDate(arrival)
             + " (+" + days + " ngày)");
 
-        // Warning nếu đổi means
         if (!cmbMeans.getValue().equals(currentOrder.getDeliveryMeans())) {
             lblWarning.setText("⚠ Bạn đang thay đổi phương tiện từ "
                 + currentOrder.getDeliveryMeans() + " sang " + cmbMeans.getValue());
@@ -104,7 +102,7 @@ public class OOD_SiteOrderEditController implements Initializable {
     }
 
     @FXML private void goSiteOrders() { navigateTo("/fxml/ood/OOD_SiteOrderList.fxml"); }
-    @FXML private void goDashboard() { navigateTo("/fxml/ood/OOD_Dashboard.fxml"); }
+    @FXML private void goDashboard()  { navigateTo("/fxml/ood/OOD_Dashboard.fxml"); }
     @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
 
     private void navigateTo(String path) {

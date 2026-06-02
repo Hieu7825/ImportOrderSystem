@@ -1,4 +1,4 @@
-package com.importorder.controller.ood;
+package com.importorder.uc2_edit_order;
 
 import com.importorder.model.FinalOrder;
 import com.importorder.model.SiteOrder;
@@ -30,7 +30,7 @@ public class OOD_SiteOrderDetailController implements Initializable {
     @FXML private Label  lblStatus;
     @FXML private Label  lblConfirmed;
     @FXML private Button btnCancel;
-    @FXML private Button btnFindReplacement;   // ← thêm mới: tìm phương án thay thế
+    @FXML private Button btnFindReplacement;
     @FXML private TableView<FinalOrder> tblItems;
     @FXML private TableColumn<FinalOrder, String> colCode;
     @FXML private TableColumn<FinalOrder, String> colName;
@@ -98,12 +98,10 @@ public class OOD_SiteOrderDetailController implements Initializable {
             ? "✅ Site đã xác nhận lúc " + DateUtils.formatDateTime(so.getConfirmedAt())
             : "⏳ Chưa xác nhận");
 
-        // Nút Hủy: chỉ hiện khi SENT và chưa xác nhận
         boolean canCancel = "SENT".equals(status) && !so.isConfirmedBySite();
         btnCancel.setVisible(canCancel);
         btnCancel.setManaged(canCancel);
 
-        // Nút Tìm phương án thay thế: chỉ hiện khi CANCELLED
         boolean canReplace = "CANCELLED".equals(status);
         if (btnFindReplacement != null) {
             btnFindReplacement.setVisible(canReplace);
@@ -129,8 +127,8 @@ public class OOD_SiteOrderDetailController implements Initializable {
     }
 
     /**
-     * PHASE 5: OOD nhấn "Tìm phương án thay thế" trên đơn CANCELLED.
-     * → Tạo sub-batch REPLACEMENT → chuyển sang SupplyDashboard để xử lý.
+     * OOD nhấn "Tìm phương án thay thế" trên đơn CANCELLED.
+     * Tạo sub-batch REPLACEMENT → chuyển sang SupplyDashboard.
      */
     @FXML
     private void handleFindReplacement() {
@@ -147,15 +145,18 @@ public class OOD_SiteOrderDetailController implements Initializable {
                 "Sub-batch thay thế: " + replacement.getSubBatchId()
                 + "\nVui lòng tra cứu tồn kho và sinh đơn mới.");
 
-            // Chuyển sang SupplyDashboard với batchId gốc + subBatchId
             FXMLLoader loader = new FXMLLoader(
                 getClass().getResource("/fxml/ood/OOD_SupplyDashboard.fxml"));
             Scene scene = new Scene(loader.load(), 1280, 720);
             scene.getStylesheets().add(
                 getClass().getResource("/css/global.css").toExternalForm());
-            OOD_SupplyDashboardController ctrl = loader.getController();
+
+            // Dùng class từ UC4 để set context
+            com.importorder.uc4_create_request.OOD_SupplyDashboardController ctrl =
+                loader.getController();
             ctrl.setBatchId(replacement.getParentBatchId());
             ctrl.setSubBatchId(replacement.getSubBatchId());
+
             Stage stage = (Stage) lblUserName.getScene().getWindow();
             stage.setScene(scene);
         } catch (Exception e) {

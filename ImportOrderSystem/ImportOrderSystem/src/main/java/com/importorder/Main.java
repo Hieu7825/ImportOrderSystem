@@ -10,15 +10,15 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-    	// Load fonts để hỗ trợ tiếng Việt
-    	javafx.scene.text.Font.loadFont(
-    		    getClass().getResourceAsStream("/fonts/BeVietnamPro-Regular.ttf"), 14);
-    	javafx.scene.text.Font.loadFont(
-    		    getClass().getResourceAsStream("/fonts/BeVietnamPro-Medium.ttf"), 14);
-    	javafx.scene.text.Font.loadFont(
-    		    getClass().getResourceAsStream("/fonts/BeVietnamPro-Bold.ttf"), 14);
-    	// Auto seed data nếu DB trống
-//    	DataSeeder.seed();
+        // Load fonts để hỗ trợ tiếng Việt
+        javafx.scene.text.Font.loadFont(
+            getClass().getResourceAsStream("/fonts/BeVietnamPro-Regular.ttf"), 14);
+        javafx.scene.text.Font.loadFont(
+            getClass().getResourceAsStream("/fonts/BeVietnamPro-Medium.ttf"), 14);
+        javafx.scene.text.Font.loadFont(
+            getClass().getResourceAsStream("/fonts/BeVietnamPro-Bold.ttf"), 14);
+        // Auto seed data nếu DB trống
+        DataSeeder.seed();
         FXMLLoader loader = new FXMLLoader(
             getClass().getResource("/fxml/Login.fxml")
         );

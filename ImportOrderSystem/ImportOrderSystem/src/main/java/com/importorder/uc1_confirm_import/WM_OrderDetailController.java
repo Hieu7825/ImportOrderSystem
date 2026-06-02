@@ -1,4 +1,4 @@
-package com.importorder.controller.wm;
+package com.importorder.uc1_confirm_import;
 
 import com.importorder.model.FinalOrder;
 import com.importorder.model.SiteOrder;
@@ -91,16 +91,15 @@ public class WM_OrderDetailController implements Initializable {
         String status = so.getStatus();
         lblStatus.setText(status);
         lblStatus.setStyle(switch (status) {
-            case "RECEIVED"   -> "-fx-text-fill: #22C55E; -fx-font-weight: 600;";
-            case "DISCREPANCY"-> "-fx-text-fill: #F59E0B; -fx-font-weight: 600;";
-            case "CANCELLED"  -> "-fx-text-fill: #EF4444; -fx-font-weight: 600;";
-            default           -> "-fx-text-fill: #38BDF8; -fx-font-weight: 600;";
+            case "RECEIVED"    -> "-fx-text-fill: #22C55E; -fx-font-weight: 600;";
+            case "DISCREPANCY" -> "-fx-text-fill: #F59E0B; -fx-font-weight: 600;";
+            case "CANCELLED"   -> "-fx-text-fill: #EF4444; -fx-font-weight: 600;";
+            default            -> "-fx-text-fill: #38BDF8; -fx-font-weight: 600;";
         });
 
         List<FinalOrder> items = siteOrderService.getItemsOfSiteOrder(siteOrderId);
         tblItems.setItems(FXCollections.observableArrayList(items));
 
-        // Discrepancies
         List<WarehouseDiscrepancy> discrepancies = discrepancyRepo.findBySiteOrder(siteOrderId);
         if (!discrepancies.isEmpty()) {
             vboxDiscrepancy.setVisible(true);
@@ -109,8 +108,8 @@ public class WM_OrderDetailController implements Initializable {
         }
     }
 
-    @FXML private void goOrderList() { navigateTo("/fxml/wm/WM_OrderList.fxml"); }
-    @FXML private void goDashboard() { navigateTo("/fxml/wm/WM_Dashboard.fxml"); }
+    @FXML private void goOrderList()  { navigateTo("/fxml/wm/WM_OrderList.fxml"); }
+    @FXML private void goDashboard()  { navigateTo("/fxml/wm/WM_Dashboard.fxml"); }
     @FXML private void goInspection() { navigateTo("/fxml/wm/WM_Inspection.fxml"); }
     @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
 

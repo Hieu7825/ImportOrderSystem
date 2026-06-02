@@ -104,12 +104,18 @@ public class SiteOrderService {
 
     public void approveCancelRequest(String siteOrderId) {
         SiteOrder so = siteOrderRepo.findBySiteOrderId(siteOrderId);
+
         if (so == null)
             throw new AppException("Không tìm thấy đơn: " + siteOrderId);
-        if (so.getCancelRequestedAt() == null)
-            throw new AppException("Đơn này không có yêu cầu hủy.");
-        if ("RECEIVED".equals(so.getStatus()))
+
+        if ("CANCELLED".equals(so.getStatus()))
+            throw new AppException("Đơn này đã bị hủy trước đó.");
+
+        if ("RECEIVED".equals(so.getStatus()) || "PARTIALLY_RECEIVED".equals(so.getStatus()))
             throw new AppException("Hàng đã được nhận, không thể duyệt hủy.");
+
+        if (so.getCancelRequestedAt() == null)
+            throw new AppException("Yêu cầu hủy này đã được xử lý hoặc không tồn tại.");
 
         siteOrderRepo.approveCancel(siteOrderId, SessionManager.getUsername());
         finalOrderRepo.cancelBySiteOrder(siteOrderId);
@@ -124,10 +130,19 @@ public class SiteOrderService {
      */
     public void rejectCancelRequest(String siteOrderId, String rejectReason) {
         SiteOrder so = siteOrderRepo.findBySiteOrderId(siteOrderId);
+
         if (so == null)
             throw new AppException("Không tìm thấy đơn: " + siteOrderId);
+
+        if ("CANCELLED".equals(so.getStatus()))
+            throw new AppException("Đơn này đã bị hủy, không thể từ chối yêu cầu hủy nữa.");
+
+        if (so.getCancelRequestedAt() == null)
+            throw new AppException("Yêu cầu hủy này đã được xử lý hoặc không tồn tại.");
+
         if (rejectReason == null || rejectReason.isBlank())
             throw new AppException("Vui lòng nhập lý do từ chối.");
+
         siteOrderRepo.rejectCancelRequest(siteOrderId, rejectReason);
     }
 

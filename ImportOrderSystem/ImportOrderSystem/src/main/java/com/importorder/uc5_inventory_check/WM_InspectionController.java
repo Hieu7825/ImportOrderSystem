@@ -1,4 +1,4 @@
-package com.importorder.controller.wm;
+package com.importorder.uc5_inventory_check;
 
 import com.importorder.model.FinalOrder;
 import com.importorder.model.SiteOrder;
@@ -26,7 +26,7 @@ public class WM_InspectionController implements Initializable {
     @FXML private Label lblUserName;
     @FXML private ListView<SiteOrder> lstSiteOrders;
     @FXML private Label lblSelectedOrder;
-    @FXML private Label lblCancelledWarning;   // ← thêm: cảnh báo đơn đã hủy (D3)
+    @FXML private Label lblCancelledWarning;
     @FXML private TableView<FinalOrder> tblInspection;
     @FXML private TableColumn<FinalOrder, String> colCode;
     @FXML private TableColumn<FinalOrder, String> colExpected;
@@ -36,8 +36,8 @@ public class WM_InspectionController implements Initializable {
     @FXML private TableColumn<FinalOrder, String> colNote;
     @FXML private Button btnConfirm;
 
-    private final SiteOrderService  siteOrderService  = new SiteOrderService();
-    private final WarehouseService  warehouseService  = new WarehouseService();
+    private final SiteOrderService siteOrderService = new SiteOrderService();
+    private final WarehouseService warehouseService  = new WarehouseService();
 
     private final Map<String, Map<String, Object>> inspectionData = new HashMap<>();
     private SiteOrder selectedOrder;
@@ -126,7 +126,6 @@ public class WM_InspectionController implements Initializable {
             return;
         }
 
-        // Đơn hợp lệ → ẩn cảnh báo
         if (lblCancelledWarning != null) {
             lblCancelledWarning.setVisible(false);
             lblCancelledWarning.setManaged(false);
@@ -199,7 +198,7 @@ public class WM_InspectionController implements Initializable {
         }
     }
 
-    // ── Inner class: Editable cell ────────────────────────────────────────────
+    // ── Inner class: Editable cell ─────────────────────────────────────────────
 
     private class EditableCell extends TableCell<FinalOrder, String> {
         private final TextField textField = new TextField();
@@ -234,12 +233,9 @@ public class WM_InspectionController implements Initializable {
         }
     }
 
-    @FXML private void goDashboard() { navigateTo("/fxml/wm/WM_Dashboard.fxml"); }
-    @FXML private void goOrderList() { navigateTo("/fxml/wm/WM_OrderList.fxml"); }
-    @FXML private void handleLogout() {
-        SessionManager.logout();
-        navigateTo("/fxml/Login.fxml");
-    }
+    @FXML private void goDashboard()  { navigateTo("/fxml/wm/WM_Dashboard.fxml"); }
+    @FXML private void goOrderList()  { navigateTo("/fxml/wm/WM_OrderList.fxml"); }
+    @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
 
     private void navigateTo(String path) {
         try {

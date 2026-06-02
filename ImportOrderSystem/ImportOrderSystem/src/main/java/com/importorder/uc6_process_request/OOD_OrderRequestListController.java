@@ -1,4 +1,4 @@
-package com.importorder.controller.ood;
+package com.importorder.uc6_process_request;
 
 import com.importorder.model.OrderRequest;
 import com.importorder.service.OrderRequestService;
@@ -30,8 +30,8 @@ public class OOD_OrderRequestListController implements Initializable {
     @FXML private TableColumn<OrderRequest, String> colBatchId;
     @FXML private TableColumn<OrderRequest, String> colCreatedBy;
     @FXML private TableColumn<OrderRequest, String> colItems;
-    @FXML private TableColumn<OrderRequest, String> colStatus;      // displayStatus
-    @FXML private TableColumn<OrderRequest, String> colSubBatches;  // ← thêm: số lần xử lý
+    @FXML private TableColumn<OrderRequest, String> colStatus;
+    @FXML private TableColumn<OrderRequest, String> colSubBatches;
     @FXML private TableColumn<OrderRequest, String> colCreatedAt;
     @FXML private TableColumn<OrderRequest, Void>   colActions;
     @FXML private Label lblPageInfo;
@@ -60,11 +60,10 @@ public class OOD_OrderRequestListController implements Initializable {
             new SimpleStringProperty(c.getValue().getItems() != null
                 ? c.getValue().getItems().size() + " mặt hàng" : "0"));
 
-        // Dùng displayStatus (= status sub-batch mới nhất) thay vì status gốc
+        // Dùng displayStatus (= status sub-batch mới nhất)
         colStatus.setCellValueFactory(c ->
             new SimpleStringProperty(c.getValue().getDisplayStatus()));
 
-        // Số lần xử lý (sub-batches)
         if (colSubBatches != null) {
             colSubBatches.setCellValueFactory(c -> {
                 int count = c.getValue().getSubBatches() != null
@@ -79,7 +78,7 @@ public class OOD_OrderRequestListController implements Initializable {
             new SimpleStringProperty(DateUtils.formatDateTime(c.getValue().getCreatedAt())));
 
         colActions.setCellFactory(col -> new TableCell<>() {
-            final Button btnDetail  = new Button("Lịch sử");  // ← xem batch detail
+            final Button btnDetail  = new Button("Lịch sử");
             final Button btnProcess = new Button("Xử lý");
             final HBox   box        = new HBox(6, btnDetail, btnProcess);
             {
@@ -138,7 +137,6 @@ public class OOD_OrderRequestListController implements Initializable {
         pagination.setItems(filtered);
     }
 
-    /** Xem lịch sử batch lớn (tất cả sub-batches + đơn hàng) */
     private void goToBatchDetail(String batchId) {
         try {
             FXMLLoader loader = new FXMLLoader(
@@ -162,7 +160,8 @@ public class OOD_OrderRequestListController implements Initializable {
             Scene scene = new Scene(loader.load(), 1280, 720);
             scene.getStylesheets().add(
                 getClass().getResource("/css/global.css").toExternalForm());
-            OOD_SupplyDashboardController ctrl = loader.getController();
+            com.importorder.uc4_create_request.OOD_SupplyDashboardController ctrl =
+                loader.getController();
             ctrl.setBatchId(r.getBatchId());
             Stage stage = (Stage) tblRequests.getScene().getWindow();
             stage.setScene(scene);
@@ -188,7 +187,7 @@ public class OOD_OrderRequestListController implements Initializable {
             Stage stage = (Stage) tblRequests.getScene().getWindow();
             stage.setScene(scene);
         } catch (Exception e) {
-            AlertUtils.showError("Lỗi", e.getMessage());
+            AlertUtils.showError("Lỗi điều hướng", e.getMessage());
         }
     }
 }
