@@ -186,6 +186,9 @@ public class WM_InspectionController implements Initializable {
                 converted.put(entry.getKey(), d);
             }
 
+            // Validate order status before persisting inspection results
+            siteOrderService.ensureCanCompleteInspection(selectedOrder.getSiteOrderId());
+
             warehouseService.submitInspection(selectedOrder.getSiteOrderId(), converted);
             siteOrderService.completeInspection(selectedOrder.getSiteOrderId());
             AlertUtils.showInfo("Thành công", "Kiểm hàng hoàn tất!");

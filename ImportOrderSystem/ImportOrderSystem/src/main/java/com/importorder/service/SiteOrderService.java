@@ -227,10 +227,34 @@ public class SiteOrderService {
         if (so == null)
             throw new AppException("Không tìm thấy đơn: " + siteOrderId);
 
-        // Chuyển từ RECEIVED_PENDING_INSPECTION → INSPECTION_COMPLETED
-        if (!"RECEIVED_PENDING_INSPECTION".equals(so.getStatus()))
-            throw new AppException("Chỉ có thể hoàn tất kiểm kê với đơn ở trạng thái RECEIVED_PENDING_INSPECTION.");
+        // Allow completion when order is in one of the expected post-receive statuses.
+        // submitInspection already computes a status (RECEIVED, PARTIALLY_RECEIVED, DISCREPANCY)
+        // so we accept those as valid to be moved to INSPECTION_COMPLETED.
+        String status = so.getStatus();
+        if (!"RECEIVED_PENDING_INSPECTION".equals(status)
+            && !"RECEIVED".equals(status)
+            && !"PARTIALLY_RECEIVED".equals(status)
+            && !"DISCREPANCY".equals(status))
+            throw new AppException("Chỉ có thể hoàn tất kiểm kê với đơn ở trạng thái RECEIVED_PENDING_INSPECTION/RECEIVED/PARTIALLY_RECEIVED/DISCREPANCY.");
 
         siteOrderRepo.updateStatus(siteOrderId, "INSPECTION_COMPLETED");
+    }
+
+    /**
+     * Validate that the given site order can be completed for inspection.
+     * This only performs checks and DOES NOT mutate state. Use this before
+     * performing operations that persist inspection results to avoid partial
+     * saves when the order is not in the correct status.
+     */
+    public void ensureCanCompleteInspection(String siteOrderId) {
+        SiteOrder so = siteOrderRepo.findBySiteOrderId(siteOrderId);
+        if (so == null)
+            throw new AppException("Không tìm thấy đơn: " + siteOrderId);
+        String status = so.getStatus();
+        if (!"RECEIVED_PENDING_INSPECTION".equals(status)
+            && !"RECEIVED".equals(status)
+            && !"PARTIALLY_RECEIVED".equals(status)
+            && !"DISCREPANCY".equals(status))
+            throw new AppException("Chỉ có thể hoàn tất kiểm kê với đơn ở trạng thái RECEIVED_PENDING_INSPECTION/RECEIVED/PARTIALLY_RECEIVED/DISCREPANCY.");
     }
 }

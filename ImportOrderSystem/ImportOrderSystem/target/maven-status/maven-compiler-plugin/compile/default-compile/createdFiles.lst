@@ -13,7 +13,6 @@ com\importorder\controller\ood\OOD_SiteOrderListController$1.class
 com\importorder\util\DataSeeder.class
 com\importorder\uc5_inventory_check\WM_InspectionController$EditableCell.class
 com\importorder\controller\site\Site_ProfileController.class
-com\importorder\uc5_inventory_check\WM_ConfirmImportController_DEPRECATED.class
 com\importorder\util\AppException$DeadlineUnreachableException.class
 com\importorder\controller\ood\OOD_SiteInviteFormController.class
 com\importorder\model\SiteInfo.class
