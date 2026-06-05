@@ -11,6 +11,7 @@
             <Label text="📦 Import Order" styleClass="sidebar-logo"/>
             <Separator style="-fx-background-color: #252A3A;"/>
             <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="✓  Xác nhận nhập kho" styleClass="nav-item" maxWidth="Infinity" onAction="#goConfirmReceived"/>
             <Button text="🔍  Kiểm kê hàng" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
             <Button text="📦  Danh sách đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderList"/>
             <VBox VBox.vgrow="ALWAYS"/>
@@ -24,11 +25,11 @@
         <SplitPane dividerPositions="0.35"
                    style="-fx-background-color: #0D0F14; -fx-padding: 32;">
 
-            <!-- LEFT: danh sách đơn chờ kiểm (SENT / PARTIALLY_RECEIVED) -->
+            <!-- LEFT: danh sách đơn chờ kiểm (RECEIVED_PENDING_INSPECTION) -->
             <VBox spacing="12">
                 <Label text="Đơn chờ kiểm hàng"
                        style="-fx-text-fill: #E8ECF5; -fx-font-size: 16px; -fx-font-weight: 700;"/>
-                <Label text="Chỉ hiển thị đơn SENT / PARTIALLY_RECEIVED"
+                <Label text="Chỉ hiển thị đơn RECEIVED_PENDING_INSPECTION (đã xác nhận, chưa kiểm)"
                        style="-fx-text-fill: #4A5368; -fx-font-size: 11px;"/>
                 <ListView fx:id="lstSiteOrders" VBox.vgrow="ALWAYS"
                           style="-fx-background-color: #13161E; -fx-border-color: #252A3A;

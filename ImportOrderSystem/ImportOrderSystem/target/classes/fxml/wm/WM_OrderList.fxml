@@ -11,6 +11,7 @@
             <Label text="📦 Import Order" styleClass="sidebar-logo"/>
             <Separator style="-fx-background-color: #252A3A;"/>
             <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="✓  Xác nhận nhập kho" styleClass="nav-item" maxWidth="Infinity" onAction="#goConfirmReceived"/>
             <Button text="🔍  Kiểm kê hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goInspection"/>
             <Button text="📦  Danh sách đơn hàng" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
             <VBox VBox.vgrow="ALWAYS"/>

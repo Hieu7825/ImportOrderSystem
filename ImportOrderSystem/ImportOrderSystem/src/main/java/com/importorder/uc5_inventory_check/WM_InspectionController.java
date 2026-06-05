@@ -54,8 +54,8 @@ public class WM_InspectionController implements Initializable {
     }
 
     private void setupList() {
-        // Chỉ load đơn SENT / PARTIALLY_RECEIVED — KHÔNG bao gồm CANCELLED (D3)
-        var pending = warehouseService.getPendingInspection();
+        // Chỉ load đơn RECEIVED_PENDING_INSPECTION — đã xác nhận, chưa kiểm kê (D3)
+        List<SiteOrder> pending = siteOrderService.getByStatus("RECEIVED_PENDING_INSPECTION");
         lstSiteOrders.setItems(FXCollections.observableArrayList(pending));
         lstSiteOrders.setCellFactory(lv -> new ListCell<>() {
             @Override
@@ -65,7 +65,7 @@ public class WM_InspectionController implements Initializable {
                 setText(so.getSiteOrderId() + "\n"
                     + so.getSiteCode() + " | " + so.getDeliveryMeans()
                     + " | " + so.getStatus());
-                setStyle("-fx-text-fill: #E8ECF5; -fx-font-size: 12px; -fx-padding: 8;");
+                setStyle("-fx-text-fill: #0b0b0b; -fx-font-size: 12px; -fx-padding: 8;");
             }
         });
         lstSiteOrders.getSelectionModel().selectedItemProperty()
@@ -174,6 +174,7 @@ public class WM_InspectionController implements Initializable {
         }
 
         try {
+            // Chuyển đổi String → Integer
             Map<String, Map<String, Object>> converted = new HashMap<>();
             for (var entry : inspectionData.entrySet()) {
                 Map<String, Object> d = new HashMap<>(entry.getValue());
@@ -186,6 +187,7 @@ public class WM_InspectionController implements Initializable {
             }
 
             warehouseService.submitInspection(selectedOrder.getSiteOrderId(), converted);
+            siteOrderService.completeInspection(selectedOrder.getSiteOrderId());
             AlertUtils.showInfo("Thành công", "Kiểm hàng hoàn tất!");
 
             setupList();
@@ -234,6 +236,7 @@ public class WM_InspectionController implements Initializable {
     }
 
     @FXML private void goDashboard()  { navigateTo("/fxml/wm/WM_Dashboard.fxml"); }
+    @FXML private void goConfirmReceived() { navigateTo("/fxml/wm/WM_ConfirmReceived.fxml"); }
     @FXML private void goOrderList()  { navigateTo("/fxml/wm/WM_OrderList.fxml"); }
     @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
 

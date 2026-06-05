@@ -39,6 +39,7 @@ public class WM_DashboardController implements Initializable {
     }
 
     @FXML private void goInspection() { navigateTo("/fxml/wm/WM_Inspection.fxml"); }
+    @FXML private void goConfirmReceived() { navigateTo("/fxml/wm/WM_ConfirmReceived.fxml"); }
     @FXML private void goOrderList() { navigateTo("/fxml/wm/WM_OrderList.fxml"); }
     @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
 

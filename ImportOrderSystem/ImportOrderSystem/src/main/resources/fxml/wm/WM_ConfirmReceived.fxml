@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.uc1_confirm_import.WM_ConfirmReceivedController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="✓  Xác nhận nhập kho" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <Button text="🔍  Kiểm kê hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goInspection"/>
+            <Button text="📦  Danh sách đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderList"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="QUẢN LÝ KHO" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label text="Xác nhận đơn hàng nhập kho"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
+            </HBox>
+
+            <VBox spacing="8">
+                <Label text="Danh sách đơn chờ xác nhận"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                <Label text="Chỉ hiển thị đơn có status SENT"
+                       style="-fx-text-fill: #4A5368; -fx-font-size: 11px;"/>
+                
+                <TableView fx:id="tblOrders" styleClass="table-view" VBox.vgrow="ALWAYS" prefHeight="400">
+                    <columns>
+                        <TableColumn fx:id="colOrderId" text="MÃ ĐƠN" prefWidth="150"/>
+                        <TableColumn fx:id="colBatchId" text="BATCH" prefWidth="150"/>
+                        <TableColumn fx:id="colSiteCode" text="SITE" prefWidth="80"/>
+                        <TableColumn fx:id="colMeans" text="VẬN CHUYỂN" prefWidth="100"/>
+                        <TableColumn fx:id="colDate" text="NGÀY GỬI" prefWidth="120"/>
+                        <TableColumn fx:id="colStatus" text="TRẠNG THÁI" prefWidth="100"/>
+                        <TableColumn fx:id="colAction" text="HÀNH ĐỘNG" prefWidth="120"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="Không có đơn chờ xác nhận"
+                               style="-fx-text-fill: #4A5368;"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

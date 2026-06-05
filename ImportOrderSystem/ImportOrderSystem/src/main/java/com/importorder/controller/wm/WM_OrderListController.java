@@ -99,6 +99,7 @@ public class WM_OrderListController implements Initializable {
 
     // ── Navigation ────────────────────────────────────────────────────────────
     @FXML private void goDashboard()  { navigateTo("/fxml/wm/WM_Dashboard.fxml"); }
+    @FXML private void goConfirmReceived() { navigateTo("/fxml/wm/WM_ConfirmReceived.fxml"); }
     @FXML private void goInspection() { navigateTo("/fxml/wm/WM_Inspection.fxml"); }
     @FXML private void handleLogout() { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
 

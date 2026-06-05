@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.uc5_inventory_check.WM_ConfirmImportController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="🔍  Kiểm kê hàng" styleClass="nav-item, nav-item-active" maxWidth="Infinity" onAction="#goInspection"/>
+            <Button text="📦  Danh sách đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderList"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="QUẢN LÝ KHO" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Button text="← Quay lại" styleClass="btn-ghost" onAction="#goInspection"/>
+                <Label text="Xác nhận đơn hàng nhập kho"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
+            </HBox>
+
+            <!-- Thông tin đơn hàng -->
+            <VBox styleClass="stat-card" spacing="12">
+                <Label text="Thông tin đơn hàng"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                <HBox spacing="32">
+                    <VBox spacing="4">
+                        <Label text="MÃ ĐƠN" styleClass="form-label"/>
+                        <Label fx:id="lblSiteOrderId" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px; -fx-font-weight: 600;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="SITE" styleClass="form-label"/>
+                        <Label fx:id="lblSiteCode" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="VẬN CHUYỂN" styleClass="form-label"/>
+                        <Label fx:id="lblMeans" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Bảng chi tiết kiểm hàng -->
+            <VBox spacing="8">
+                <Label text="Chi tiết kiểm hàng"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                <TableView fx:id="tblInspectionDetail" styleClass="table-view" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colCode" text="MÃ HÀNG" prefWidth="100"/>
+                        <TableColumn fx:id="colExpected" text="ĐẶT" prefWidth="70"/>
+                        <TableColumn fx:id="colActual" text="THỰC NHẬN" prefWidth="100"/>
+                        <TableColumn fx:id="colActualCode" text="MÃ THỰC NHẬN" prefWidth="130"/>
+                        <TableColumn fx:id="colNote" text="GHI CHÚ" prefWidth="200"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- Thông tin kiểm hàng bởi -->
+            <VBox styleClass="stat-card" spacing="12">
+                <Label text="Thông tin kiểm hàng"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                <HBox spacing="32">
+                    <VBox spacing="8">
+                        <Label text="Người kiểm" styleClass="form-label"/>
+                        <Label fx:id="lblInspectedBy" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                    <VBox spacing="8">
+                        <Label text="Ngày kiểm" styleClass="form-label"/>
+                        <Label fx:id="lblInspectionDate" style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Xác nhận -->
+            <VBox spacing="12">
+                <Label text="Xác nhận nhập kho"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                <VBox spacing="8">
+                    <CheckBox fx:id="chkConfirmAccurate" 
+                              text="Tôi xác nhận các thông tin kiểm hàng ở trên là chính xác"/>
+                    <CheckBox fx:id="chkConfirmProceed" 
+                              text="Tôi đồng ý cập nhật trạng thái đơn hàng là đã nhập kho"/>
+                </VBox>
+            </VBox>
+
+            <!-- Nút hành động -->
+            <HBox spacing="12" alignment="CENTER_RIGHT">
+                <Button text="Quay lại" styleClass="btn-secondary" onAction="#goInspection"/>
+                <Button fx:id="btnConfirmImport" text="✓ Xác nhận nhập kho" 
+                        styleClass="btn-primary" onAction="#handleConfirmImport"
+                        disable="true"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

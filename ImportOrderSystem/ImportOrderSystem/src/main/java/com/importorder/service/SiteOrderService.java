@@ -34,6 +34,10 @@ public class SiteOrderService {
         return siteOrderRepo.findAll();
     }
 
+    public List<SiteOrder> getByStatus(String status) {
+        return siteOrderRepo.findByStatus(status);
+    }
+
     public List<SiteOrder> getCancelRequests() {
         // Edge Case C4: đã sort theo estimatedArrival gần nhất trong repo
         return siteOrderRepo.findCancelRequests();
@@ -197,5 +201,36 @@ public class SiteOrderService {
      */
     public SubBatch startReplacement(String cancelledSiteOrderId) {
         return optimService.createReplacementSubBatch(cancelledSiteOrderId);
+    }
+
+    // ── WM: Xác nhận đơn hàng nhập kho ───────────────────────────────────────
+
+    public List<SiteOrder> getSentOrders() {
+        // Lấy danh sách đơn có status = SENT (chờ xác nhận nhập kho)
+        return siteOrderRepo.findByStatus("SENT");
+    }
+
+    public void updateOrderStatus(String siteOrderId, String newStatus) {
+        SiteOrder so = siteOrderRepo.findBySiteOrderId(siteOrderId);
+        if (so == null)
+            throw new AppException("Không tìm thấy đơn: " + siteOrderId);
+
+        // Chỉ cho phép chuyển từ SENT → RECEIVED_PENDING_INSPECTION
+        if (!"SENT".equals(so.getStatus()))
+            throw new AppException("Chỉ có thể xác nhận đơn ở trạng thái SENT.");
+
+        siteOrderRepo.updateStatus(siteOrderId, newStatus);
+    }
+
+    public void completeInspection(String siteOrderId) {
+        SiteOrder so = siteOrderRepo.findBySiteOrderId(siteOrderId);
+        if (so == null)
+            throw new AppException("Không tìm thấy đơn: " + siteOrderId);
+
+        // Chuyển từ RECEIVED_PENDING_INSPECTION → INSPECTION_COMPLETED
+        if (!"RECEIVED_PENDING_INSPECTION".equals(so.getStatus()))
+            throw new AppException("Chỉ có thể hoàn tất kiểm kê với đơn ở trạng thái RECEIVED_PENDING_INSPECTION.");
+
+        siteOrderRepo.updateStatus(siteOrderId, "INSPECTION_COMPLETED");
     }
 }
