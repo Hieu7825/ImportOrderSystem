@@ -1,0 +1,15 @@
+com\importorder\fakes\FakeDiscrepancyRepository.class
+com\importorder\service\UC1_ConfirmImportTest.class
+com\importorder\fakes\FakeMerchandiseRepository.class
+com\importorder\service\UC4_CreateOrderRequestTest.class
+com\importorder\fakes\FakeOrderRequestRepository.class
+com\importorder\fakes\FakeSiteOrderRepository.class
+com\importorder\fakes\FakeFinalOrderRepository.class
+com\importorder\service\UC5_InventoryInspectionTest.class
+com\importorder\service\UC6_ProcessImportRequestTest.class
+com\importorder\service\UC3_HandleCancelTest.class
+com\importorder\fakes\FakeStockRepository.class
+com\importorder\fakes\FakeSiteRepository.class
+com\importorder\service\UC2_EditOrderTest.class
+scratch\TestMongoLazy.class
+com\importorder\fakes\FakeSubBatchRepository.class

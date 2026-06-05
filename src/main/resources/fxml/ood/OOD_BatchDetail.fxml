@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.uc6_process_request.OOD_BatchDetailController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item, nav-item-active"
+                    maxWidth="Infinity" onAction="#goOrderRequests"/>
+            <Button text="📦  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goSiteOrders"/>
+            <Button text="⚠  Yêu cầu hủy" styleClass="nav-item" maxWidth="Infinity" onAction="#goCancelRequests"/>
+            <Button text="🏭  Quản lý Site" styleClass="nav-item" maxWidth="Infinity" onAction="#goSites"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ĐẶT HÀNG QUỐC TẾ" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+            <VBox spacing="20" style="-fx-padding: 32;">
+
+                <!-- Header -->
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Button text="← Quay lại" styleClass="btn-ghost" onAction="#goBack"/>
+                    <VBox HBox.hgrow="ALWAYS" spacing="4">
+                        <Label text="Chi tiết Batch"
+                               style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
+                        <Label fx:id="lblBatchId"
+                               style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                    </VBox>
+                    <VBox spacing="4" alignment="CENTER_RIGHT">
+                        <Label text="TRẠNG THÁI HIỆN TẠI" styleClass="form-label"/>
+                        <Label fx:id="lblDisplayStatus"
+                               style="-fx-font-size: 16px; -fx-font-weight: 700;"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Thông tin chung -->
+                <VBox styleClass="stat-card" spacing="12">
+                    <Label text="Thông tin chung"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                    <HBox spacing="32">
+                        <VBox spacing="4">
+                            <Label text="NGƯỜI TẠO" styleClass="form-label"/>
+                            <Label fx:id="lblCreatedBy"
+                                   style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        </VBox>
+                        <VBox spacing="4">
+                            <Label text="NGÀY TẠO" styleClass="form-label"/>
+                            <Label fx:id="lblCreatedAt"
+                                   style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- Mặt hàng gốc -->
+                <VBox spacing="8">
+                    <Label text="Mặt hàng yêu cầu nhập (gốc)"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                    <TableView fx:id="tblOriginalItems" styleClass="table-view" prefHeight="200">
+                        <columns>
+                            <TableColumn fx:id="colItemCode" text="MÃ HÀNG"    prefWidth="120"/>
+                            <TableColumn fx:id="colItemName" text="TÊN HÀNG"   prefWidth="280"/>
+                            <TableColumn fx:id="colQty"      text="SỐ LƯỢNG"   prefWidth="100"/>
+                            <TableColumn fx:id="colUnit"     text="ĐƠN VỊ"     prefWidth="100"/>
+                            <TableColumn fx:id="colDate"     text="NGÀY NHẬN M.MUỐN" prefWidth="160"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Không có dữ liệu" style="-fx-text-fill: #4A5368;"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+
+                <!-- Lịch sử xử lý (sub-batches — thêm động từ controller) -->
+                <VBox spacing="12">
+                    <Label text="Lịch sử xử lý"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                    <VBox fx:id="vboxSubBatches" spacing="12"/>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

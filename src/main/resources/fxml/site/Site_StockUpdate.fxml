@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.site.Site_StockUpdateController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="ℹ  Thông tin site" styleClass="nav-item" maxWidth="Infinity" onAction="#goProfile"/>
+            <Button text="📋  Mặt hàng KD" styleClass="nav-item" maxWidth="Infinity" onAction="#goCatalog"/>
+            <Button text="📦  Tồn kho" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <Button text="🛒  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrders"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label fx:id="lblSiteCode" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+            <Label text="Cập nhật tồn kho"
+                   style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+
+            <!-- Chọn batch -->
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label text="Batch đang hỏi tồn kho:" styleClass="form-label"/>
+                <ComboBox fx:id="cmbBatch" promptText="Chọn batch..."
+                          style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
+                                 -fx-border-radius: 8px; -fx-background-radius: 8px;
+                                 -fx-text-fill: #E8ECF5;" prefWidth="280"
+                          onAction="#handleBatchSelected"/>
+            </HBox>
+
+            <!-- Table nhập tồn kho -->
+            <TableView fx:id="tblStock" styleClass="table-view" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colCode" text="MÃ HÀNG" prefWidth="130"/>
+                    <TableColumn fx:id="colName" text="TÊN HÀNG" prefWidth="280"/>
+                    <TableColumn fx:id="colQty" text="TỒN KHO HIỆN TẠI" prefWidth="160"/>
+                    <TableColumn fx:id="colUnit" text="ĐƠN VỊ" prefWidth="100"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chọn batch để xem và cập nhật tồn kho"
+                           style="-fx-text-fill: #4A5368;"/>
+                </placeholder>
+            </TableView>
+
+            <HBox spacing="12" alignment="CENTER_RIGHT">
+                <Button fx:id="btnSave" text="💾 Lưu tồn kho" styleClass="btn-primary"
+                        onAction="#handleSave" disable="true"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

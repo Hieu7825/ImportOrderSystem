@@ -1,0 +1,203 @@
+package com.importorder.controller.sd;
+
+import com.importorder.model.OrderRequest;
+import com.importorder.service.OrderRequestService;
+import com.importorder.util.AlertUtils;
+import com.importorder.util.DateUtils;
+import com.importorder.util.SessionManager;
+import com.importorder.util.PaginationHelper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
+public class SD_OrderRequestListController implements Initializable {
+
+    @FXML private Label lblUserName;
+    @FXML private ComboBox<String> cmbStatus;
+    @FXML private TableView<OrderRequest> tblRequests;
+    @FXML private TableColumn<OrderRequest, String> colBatchId;
+    @FXML private TableColumn<OrderRequest, String> colItems;
+    @FXML private TableColumn<OrderRequest, String> colStatus;
+    @FXML private TableColumn<OrderRequest, String> colCreatedAt;
+    @FXML private TableColumn<OrderRequest, Void> colActions;
+    @FXML private Label lblPageInfo;
+
+    private PaginationHelper<OrderRequest> pagination;
+    private final OrderRequestService orderService = new OrderRequestService();
+    private List<OrderRequest> allRequests;
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        lblUserName.setText(SessionManager.getCurrentUser().getFullName());
+        cmbStatus.setItems(FXCollections.observableArrayList(
+            "Tất cả", "PENDING", "PROCESSING", "COMPLETED", "CANCELLED"));
+        cmbStatus.setValue("Tất cả");
+        setupTable();
+        pagination = new PaginationHelper<>(tblRequests, lblPageInfo); // ← TRƯỚC
+        loadData();                                                     // ← SAU
+    }
+
+    private void setupTable() {
+        colBatchId.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getBatchId()));
+        colItems.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getItems() != null
+                ? c.getValue().getItems().size() + " mặt hàng" : "0"));
+        colStatus.setCellValueFactory(c ->
+            new SimpleStringProperty(c.getValue().getStatus()));
+        colCreatedAt.setCellValueFactory(c ->
+            new SimpleStringProperty(DateUtils.formatDateTime(c.getValue().getCreatedAt())));
+
+        colActions.setCellFactory(col -> new TableCell<>() {
+            final Button btnView   = new Button("Xem");
+            final Button btnEdit   = new Button("Sửa");
+            final Button btnCancel = new Button("Hủy");
+            final HBox   box       = new HBox(6, btnView, btnEdit, btnCancel);
+            {
+                btnView.setStyle("-fx-background-color: rgba(79,110,247,0.15); " +
+                    "-fx-text-fill: #4F6EF7; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btnEdit.setStyle("-fx-background-color: rgba(245,158,11,0.15); " +
+                    "-fx-text-fill: #F59E0B; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+                btnCancel.setStyle("-fx-background-color: rgba(239,68,68,0.15); " +
+                    "-fx-text-fill: #EF4444; -fx-background-radius: 6px; -fx-cursor: hand; -fx-font-size: 11px;");
+
+                btnView.setOnAction(e -> {
+                    OrderRequest r = getTableView().getItems().get(getIndex());
+                    goToDetail(r);
+                });
+                btnEdit.setOnAction(e -> {
+                    OrderRequest r = getTableView().getItems().get(getIndex());
+                    goToEdit(r);
+                });
+                btnCancel.setOnAction(e -> {
+                    OrderRequest r = getTableView().getItems().get(getIndex());
+                    handleCancel(r);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) { setGraphic(null); return; }
+                OrderRequest r = getTableView().getItems().get(getIndex());
+                boolean isPending = "PENDING".equals(r.getStatus());
+                btnEdit.setVisible(isPending);
+                btnEdit.setManaged(isPending);
+                btnCancel.setVisible(isPending);
+                btnCancel.setManaged(isPending);
+                setGraphic(box);
+            }
+        });
+    }
+
+    private void loadData() {
+        allRequests = orderService.getRequestsForCurrentUser();
+        applyFilter();
+    }
+
+    @FXML
+    private void handleFilter() {
+        applyFilter();
+    }
+
+    private void applyFilter() {
+        String status = cmbStatus.getValue();
+        List<OrderRequest> filtered = allRequests.stream()
+            .filter(r -> "Tất cả".equals(status) || status.equals(r.getStatus()))
+            .collect(Collectors.toList());
+        pagination.setItems(filtered);
+    }
+
+    @FXML
+    private void handleCreate() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/sd/SD_OrderRequestForm.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) tblRequests.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    private void goToDetail(OrderRequest r) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/sd/SD_OrderRequestDetail.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            SD_OrderRequestDetailController ctrl = loader.getController();
+            ctrl.setBatchId(r.getBatchId());
+            Stage stage = (Stage) tblRequests.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    private void goToEdit(OrderRequest r) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/fxml/sd/SD_OrderRequestForm.fxml"));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            SD_OrderRequestFormController ctrl = loader.getController();
+            ctrl.setEditMode(r.getBatchId());
+            Stage stage = (Stage) tblRequests.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+
+    private void handleCancel(OrderRequest r) {
+        String reason = AlertUtils.showConfirmWithReason(
+            "Hủy yêu cầu", "Xác nhận hủy batch " + r.getBatchId() + "?");
+        if (reason != null) {
+            try {
+                orderService.cancelRequest(r.getBatchId(), reason);
+                loadData();
+            } catch (Exception e) {
+                AlertUtils.showError("Lỗi", e.getMessage());
+            }
+        }
+    }
+
+    // ── Pagination ────────────────────────────────────────────────────────────
+    @FXML private void handlePrevPage() { pagination.prevPage(); }
+    @FXML private void handleNextPage() { pagination.nextPage(); }
+
+    // ── Navigation ────────────────────────────────────────────────────────────
+    @FXML private void goDashboard()   { navigateTo("/fxml/sd/SD_Dashboard.fxml"); }
+    @FXML private void goMerchandise() { navigateTo("/fxml/sd/SD_MerchandiseList.fxml"); }
+    @FXML private void handleLogout()  { SessionManager.logout(); navigateTo("/fxml/Login.fxml"); }
+
+    private void navigateTo(String path) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
+            Scene scene = new Scene(loader.load(), 1280, 720);
+            scene.getStylesheets().add(
+                getClass().getResource("/css/global.css").toExternalForm());
+            Stage stage = (Stage) tblRequests.getScene().getWindow();
+            stage.setScene(scene);
+        } catch (Exception e) {
+            AlertUtils.showError("Lỗi", e.getMessage());
+        }
+    }
+}
