@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.ood.OOD_DashboardController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderRequests"/>
+            <Button text="📦  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goSiteOrders"/>
+            <Button text="⚠  Yêu cầu hủy" styleClass="nav-item" maxWidth="Infinity" onAction="#goCancelRequests"/>
+            <Button text="🏭  Quản lý Site" styleClass="nav-item" maxWidth="Infinity" onAction="#goSites"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ĐẶT HÀNG QUỐC TẾ" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+            <Button text="🔑 Đổi mật khẩu" styleClass="btn-ghost" maxWidth="Infinity" onAction="#handleChangePassword" style="-fx-font-size: 12px;"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="24" style="-fx-padding: 32;">
+            <Label text="Tổng quan" style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+            <HBox spacing="16">
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Yêu cầu chờ xử lý" styleClass="stat-card-label"/>
+                    <Label fx:id="lblPending" text="0" styleClass="stat-card-value" style="-fx-text-fill: #F59E0B;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Đang xử lý" styleClass="stat-card-label"/>
+                    <Label fx:id="lblProcessing" text="0" styleClass="stat-card-value" style="-fx-text-fill: #38BDF8;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Site đang hoạt động" styleClass="stat-card-label"/>
+                    <Label fx:id="lblActiveSites" text="0" styleClass="stat-card-value" style="-fx-text-fill: #22C55E;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="8">
+                    <Label text="Yêu cầu hủy chờ duyệt" styleClass="stat-card-label"/>
+                    <Label fx:id="lblCancelReqs" text="0" styleClass="stat-card-value" style="-fx-text-fill: #EF4444;"/>
+                </VBox>
+            </HBox>
+            <HBox spacing="16">
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12" style="-fx-cursor: hand;" onMouseClicked="#goOrderRequests">
+                    <Label text="📋  Xử lý yêu cầu nhập hàng" style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                    <Label text="Tra cứu tồn kho, tối ưu và sinh đơn hàng" style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="12" style="-fx-cursor: hand;" onMouseClicked="#goSites">
+                    <Label text="🏭  Quản lý Site nhập khẩu" style="-fx-text-fill: #E8ECF5; -fx-font-size: 15px; -fx-font-weight: 600;"/>
+                    <Label text="Thêm, cập nhật, ngừng liên doanh site" style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

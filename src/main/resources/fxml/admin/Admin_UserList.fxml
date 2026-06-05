@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.admin.Admin_UserListController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+
+    <!-- SIDEBAR -->
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item"
+                    maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="👥  Quản lý tài khoản" styleClass="nav-item, nav-item-active"
+                    maxWidth="Infinity"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ADMIN" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout"
+                    maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+
+    <!-- MAIN -->
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <Label text="Quản lý tài khoản"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"
+                       HBox.hgrow="ALWAYS"/>
+                <Button text="+ Tạo tài khoản" styleClass="btn-primary"
+                        onAction="#handleCreate"/>
+            </HBox>
+
+            <!-- Filter -->
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <TextField fx:id="txtSearch" promptText="Tìm theo username, họ tên..."
+                           styleClass="text-field" prefWidth="300"
+                           onKeyReleased="#handleSearch"/>
+                <ComboBox fx:id="cmbRole" promptText="Tất cả roles"
+                          style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
+                                 -fx-border-radius: 8px; -fx-background-radius: 8px;
+                                 -fx-text-fill: #E8ECF5;" prefWidth="150"
+                          onAction="#handleSearch"/>
+                <ComboBox fx:id="cmbStatus" promptText="Tất cả trạng thái"
+                          style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
+                                 -fx-border-radius: 8px; -fx-background-radius: 8px;
+                                 -fx-text-fill: #E8ECF5;" prefWidth="180"
+                          onAction="#handleSearch"/>
+            </HBox>
+
+            <!-- Table -->
+            <TableView fx:id="tblUsers" styleClass="table-view" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colUsername" text="USERNAME" prefWidth="150"/>
+                    <TableColumn fx:id="colFullName" text="HỌ TÊN" prefWidth="200"/>
+                    <TableColumn fx:id="colRole" text="ROLE" prefWidth="100"/>
+                    <TableColumn fx:id="colSiteCode" text="SITE" prefWidth="80"/>
+                    <TableColumn fx:id="colStatus" text="TRẠNG THÁI" prefWidth="120"/>
+                    <TableColumn fx:id="colCreatedAt" text="NGÀY TẠO" prefWidth="150"/>
+                    <TableColumn fx:id="colActions" text="THAO TÁC" prefWidth="160"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có tài khoản nào"
+                           style="-fx-text-fill: #4A5368; -fx-font-size: 13px;"/>
+                </placeholder>
+            </TableView>
+			 <!-- Thêm sau TableView -->
+			<HBox alignment="CENTER" spacing="12" style="-fx-padding: 8 0 0 0;">
+ 		 	  <Button text="◀ Trang trước" styleClass="btn-ghost" onAction="#handlePrevPage"/>
+  			  <Label fx:id="lblPageInfo"
+  		 	        style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+ 		 	  <Button text="Trang sau ▶" styleClass="btn-ghost" onAction="#handleNextPage"/>
+			</HBox>
+        </VBox>
+    </center>
+</BorderPane>

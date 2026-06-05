@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.sd.SD_OrderRequestFormController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item, nav-item-active"
+                    maxWidth="Infinity" onAction="#handleCancel"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="BỘ PHẬN BÁN HÀNG" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout"
+                    maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Button text="← Quay lại" styleClass="btn-ghost" onAction="#handleCancel"/>
+                <Label fx:id="lblTitle" text="Tạo yêu cầu nhập hàng"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
+            </HBox>
+
+            <!-- Error label -->
+            <Label fx:id="lblError" styleClass="form-error" wrapText="true"
+                   visible="false" managed="false"
+                   style="-fx-background-color: rgba(239,68,68,0.1);
+                          -fx-background-radius: 6px; -fx-padding: 8 12;"/>
+
+            <!-- Toolbar thêm dòng -->
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <ComboBox fx:id="cmbItemCode" promptText="Chọn mã hàng..."
+                          style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
+                                 -fx-border-radius: 8px; -fx-background-radius: 8px;
+                                 -fx-text-fill: #E8ECF5;" prefWidth="220"
+                          onAction="#handleItemSelected"/>
+                <TextField fx:id="txtQty" promptText="Số lượng"
+                           styleClass="text-field" prefWidth="100"/>
+                <TextField fx:id="txtUnit" promptText="Đơn vị"
+                           styleClass="text-field" prefWidth="100"/>
+                <DatePicker fx:id="dpDate" promptText="Ngày nhận mong muốn"
+                            style="-fx-background-color: #1C2030; -fx-border-color: #252A3A;
+                                   -fx-border-radius: 8px; -fx-background-radius: 8px;"
+                            prefWidth="180"/>
+                <Button text="+ Thêm dòng" styleClass="btn-primary"
+                        onAction="#handleAddItem"/>
+            </HBox>
+
+            <!-- Table danh sách mặt hàng -->
+            <TableView fx:id="tblItems" styleClass="table-view" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colNo" text="STT" prefWidth="50"/>
+                    <TableColumn fx:id="colCode" text="MÃ HÀNG" prefWidth="120"/>
+                    <TableColumn fx:id="colName" text="TÊN HÀNG" prefWidth="250"/>
+                    <TableColumn fx:id="colQty" text="SỐ LƯỢNG" prefWidth="100"/>
+                    <TableColumn fx:id="colUnit" text="ĐƠN VỊ" prefWidth="100"/>
+                    <TableColumn fx:id="colDate" text="NGÀY NHẬN M.MUỐN" prefWidth="170"/>
+                    <TableColumn fx:id="colDel" text="" prefWidth="60"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có mặt hàng nào — thêm ở trên"
+                           style="-fx-text-fill: #4A5368;"/>
+                </placeholder>
+            </TableView>
+
+            <!-- Bottom buttons -->
+            <HBox spacing="12" alignment="CENTER_RIGHT">
+                <Label fx:id="lblItemCount"
+                       style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"
+                       HBox.hgrow="ALWAYS"/>
+                <Button text="Hủy thay đổi" styleClass="btn-ghost"
+                        onAction="#handleCancel"/>
+                <Button fx:id="btnSave" text="Tạo yêu cầu" styleClass="btn-primary"
+                        onAction="#handleSave"/>
+            </HBox>
+
+        </VBox>
+    </center>
+</BorderPane>
