@@ -13,9 +13,23 @@ import java.util.List;
 
 public class SiteService {
 
-    private final SiteRepository      siteRepo      = new SiteRepository();
-    private final SiteOrderRepository siteOrderRepo = new SiteOrderRepository();
-    private final UserRepository      userRepo      = new UserRepository();
+    private final SiteRepository      siteRepo;
+    private final SiteOrderRepository siteOrderRepo;
+    private final UserRepository      userRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public SiteService(SiteRepository siteRepo, SiteOrderRepository siteOrderRepo, UserRepository userRepo) {
+        this.siteRepo = siteRepo;
+        this.siteOrderRepo = siteOrderRepo;
+        this.userRepo = userRepo;
+    }
+
+    // Default Constructor (for production)
+    public SiteService() {
+        this.siteRepo = new SiteRepository();
+        this.siteOrderRepo = new SiteOrderRepository();
+        this.userRepo = new UserRepository();
+    }
 
     // ── Chỉ SITE tự cập nhật thông tin của mình ──────────────────────────────
 

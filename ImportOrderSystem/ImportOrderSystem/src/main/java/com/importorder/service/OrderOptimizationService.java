@@ -14,12 +14,38 @@ import java.util.stream.Collectors;
 
 public class OrderOptimizationService {
 
-    private final SiteRepository         siteRepo       = new SiteRepository();
-    private final StockRepository        stockRepo      = new StockRepository();
-    private final OrderRequestRepository orderRepo      = new OrderRequestRepository();
-    private final SiteOrderRepository    siteOrderRepo  = new SiteOrderRepository();
-    private final FinalOrderRepository   finalOrderRepo = new FinalOrderRepository();
-    private final SubBatchRepository     subBatchRepo   = new SubBatchRepository();
+    private final SiteRepository         siteRepo;
+    private final StockRepository        stockRepo;
+    private final OrderRequestRepository orderRepo;
+    private final SiteOrderRepository    siteOrderRepo;
+    private final FinalOrderRepository   finalOrderRepo;
+    private final SubBatchRepository     subBatchRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public OrderOptimizationService(
+            SiteRepository siteRepo,
+            StockRepository stockRepo,
+            OrderRequestRepository orderRepo,
+            SiteOrderRepository siteOrderRepo,
+            FinalOrderRepository finalOrderRepo,
+            SubBatchRepository subBatchRepo) {
+        this.siteRepo = siteRepo;
+        this.stockRepo = stockRepo;
+        this.orderRepo = orderRepo;
+        this.siteOrderRepo = siteOrderRepo;
+        this.finalOrderRepo = finalOrderRepo;
+        this.subBatchRepo = subBatchRepo;
+    }
+
+    // Default Constructor (for production)
+    public OrderOptimizationService() {
+        this.siteRepo = new SiteRepository();
+        this.stockRepo = new StockRepository();
+        this.orderRepo = new OrderRequestRepository();
+        this.siteOrderRepo = new SiteOrderRepository();
+        this.finalOrderRepo = new FinalOrderRepository();
+        this.subBatchRepo = new SubBatchRepository();
+    }
 
     // =========================================================
     // BƯỚC 1: Bắt đầu xử lý batch — tạo SubBatch ORIGINAL

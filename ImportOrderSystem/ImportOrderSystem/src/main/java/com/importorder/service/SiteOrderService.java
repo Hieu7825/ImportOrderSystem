@@ -13,10 +13,34 @@ import java.util.List;
 
 public class SiteOrderService {
 
-    private final SiteOrderRepository  siteOrderRepo  = new SiteOrderRepository();
-    private final FinalOrderRepository finalOrderRepo = new FinalOrderRepository();
-    private final SubBatchRepository   subBatchRepo   = new SubBatchRepository();
-    private final OrderOptimizationService optimService = new OrderOptimizationService();
+    private final SiteOrderRepository  siteOrderRepo;
+    private final FinalOrderRepository finalOrderRepo;
+    private final SubBatchRepository   subBatchRepo;
+    private final OrderOptimizationService optimService;
+    private final com.importorder.repository.SiteRepository siteRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public SiteOrderService(
+            SiteOrderRepository siteOrderRepo,
+            FinalOrderRepository finalOrderRepo,
+            SubBatchRepository subBatchRepo,
+            OrderOptimizationService optimService,
+            com.importorder.repository.SiteRepository siteRepo) {
+        this.siteOrderRepo = siteOrderRepo;
+        this.finalOrderRepo = finalOrderRepo;
+        this.subBatchRepo = subBatchRepo;
+        this.optimService = optimService;
+        this.siteRepo = siteRepo;
+    }
+
+    // Default Constructor (for production)
+    public SiteOrderService() {
+        this.siteOrderRepo = new SiteOrderRepository();
+        this.finalOrderRepo = new FinalOrderRepository();
+        this.subBatchRepo = new SubBatchRepository();
+        this.optimService = new OrderOptimizationService();
+        this.siteRepo = new com.importorder.repository.SiteRepository();
+    }
 
     public List<SiteOrder> getByBatch(String batchId) {
         return siteOrderRepo.findByBatch(batchId);
@@ -68,9 +92,7 @@ public class SiteOrderService {
                 "Mọi thay đổi cần tạo đơn điều chỉnh mới.");
 
         // Tính lại estimatedArrival theo means mới
-        com.importorder.model.SiteInfo site =
-            new com.importorder.repository.SiteRepository()
-                .findByCode(so.getSiteCode());
+        com.importorder.model.SiteInfo site = siteRepo.findByCode(so.getSiteCode());
         if (site == null)
             throw new AppException("Không tìm thấy thông tin site: " + so.getSiteCode());
 

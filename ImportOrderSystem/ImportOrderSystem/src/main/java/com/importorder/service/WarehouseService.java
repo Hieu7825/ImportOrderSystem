@@ -12,9 +12,26 @@ import java.util.Map;
 
 public class WarehouseService {
 
-    private final SiteOrderRepository siteOrderRepo = new SiteOrderRepository();
-    private final FinalOrderRepository finalOrderRepo = new FinalOrderRepository();
-    private final DiscrepancyRepository discrepancyRepo = new DiscrepancyRepository();
+    private final SiteOrderRepository siteOrderRepo;
+    private final FinalOrderRepository finalOrderRepo;
+    private final DiscrepancyRepository discrepancyRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public WarehouseService(
+            SiteOrderRepository siteOrderRepo,
+            FinalOrderRepository finalOrderRepo,
+            DiscrepancyRepository discrepancyRepo) {
+        this.siteOrderRepo = siteOrderRepo;
+        this.finalOrderRepo = finalOrderRepo;
+        this.discrepancyRepo = discrepancyRepo;
+    }
+
+    // Default Constructor (for production)
+    public WarehouseService() {
+        this.siteOrderRepo = new SiteOrderRepository();
+        this.finalOrderRepo = new FinalOrderRepository();
+        this.discrepancyRepo = new DiscrepancyRepository();
+    }
 
     public List<SiteOrder> getPendingInspection() {
         return siteOrderRepo.findPendingInspection();

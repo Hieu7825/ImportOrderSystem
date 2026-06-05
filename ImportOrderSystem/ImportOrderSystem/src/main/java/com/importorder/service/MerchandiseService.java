@@ -11,8 +11,20 @@ import java.util.List;
 
 public class MerchandiseService {
 
-    private final MerchandiseRepository merchRepo = new MerchandiseRepository();
-    private final OrderRequestRepository orderRepo = new OrderRequestRepository();
+    private final MerchandiseRepository merchRepo;
+    private final OrderRequestRepository orderRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public MerchandiseService(MerchandiseRepository merchRepo, OrderRequestRepository orderRepo) {
+        this.merchRepo = merchRepo;
+        this.orderRepo = orderRepo;
+    }
+
+    // Default Constructor (for production)
+    public MerchandiseService() {
+        this.merchRepo = new MerchandiseRepository();
+        this.orderRepo = new OrderRequestRepository();
+    }
 
     public Merchandise create(String itemCode, String itemName, String unit,
                                String category, String description) {

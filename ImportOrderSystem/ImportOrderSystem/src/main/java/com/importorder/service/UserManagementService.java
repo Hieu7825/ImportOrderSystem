@@ -11,8 +11,20 @@ import java.util.List;
 
 public class UserManagementService {
 
-    private final UserRepository      userRepo      = new UserRepository();
-    private final SiteOrderRepository siteOrderRepo = new SiteOrderRepository();
+    private final UserRepository      userRepo;
+    private final SiteOrderRepository siteOrderRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public UserManagementService(UserRepository userRepo, SiteOrderRepository siteOrderRepo) {
+        this.userRepo = userRepo;
+        this.siteOrderRepo = siteOrderRepo;
+    }
+
+    // Default Constructor (for production)
+    public UserManagementService() {
+        this.userRepo = new UserRepository();
+        this.siteOrderRepo = new SiteOrderRepository();
+    }
 
     public User createUser(String username, String fullName, String role,
                            String siteCode, String tempPassword) {

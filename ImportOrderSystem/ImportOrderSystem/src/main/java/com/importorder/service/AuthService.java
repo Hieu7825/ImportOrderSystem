@@ -8,7 +8,17 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
 
-    private final UserRepository userRepo = new UserRepository();
+    private final UserRepository userRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public AuthService(UserRepository userRepo) {
+        this.userRepo = userRepo;
+    }
+
+    // Default Constructor (for production)
+    public AuthService() {
+        this.userRepo = new UserRepository();
+    }
 
     public User login(String username, String password) {
         if (username == null || username.isBlank() ||

@@ -16,8 +16,22 @@ import java.util.Set;
 
 public class OrderRequestService {
 
-    private final OrderRequestRepository orderRepo  = new OrderRequestRepository();
-    private final MerchandiseRepository  merchRepo  = new MerchandiseRepository();
+    private final OrderRequestRepository orderRepo;
+    private final MerchandiseRepository  merchRepo;
+
+    // Constructor for Dependency Injection (for testing)
+    public OrderRequestService(
+            OrderRequestRepository orderRepo,
+            MerchandiseRepository merchRepo) {
+        this.orderRepo = orderRepo;
+        this.merchRepo = merchRepo;
+    }
+
+    // Default Constructor (for production)
+    public OrderRequestService() {
+        this.orderRepo = new OrderRequestRepository();
+        this.merchRepo = new MerchandiseRepository();
+    }
 
     public OrderRequest createRequest(List<OrderItem> items) {
         validateItems(items);
