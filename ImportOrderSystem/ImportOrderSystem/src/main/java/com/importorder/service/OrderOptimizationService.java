@@ -227,6 +227,15 @@ public class OrderOptimizationService {
         // Cập nhật sub-batch → COMPLETED
         if (subBatchId != null) {
             subBatchRepo.updateStatus(subBatchId, "COMPLETED");
+        } else {
+            // Luồng ORIGINAL: đóng sub-batch ORIGINAL đang PROCESSING để
+            // displayStatus của batch chuyển sang COMPLETED, tránh việc OOD
+            // xử lý / sinh đơn lại lần nữa cho cùng một yêu cầu.
+            for (SubBatch sb : subBatchRepo.findByParentBatch(batchId)) {
+                if ("ORIGINAL".equals(sb.getType()) && "PROCESSING".equals(sb.getStatus())) {
+                    subBatchRepo.updateStatus(sb.getSubBatchId(), "COMPLETED");
+                }
+            }
         }
         orderRepo.updateStatus(batchId, "COMPLETED");
     }

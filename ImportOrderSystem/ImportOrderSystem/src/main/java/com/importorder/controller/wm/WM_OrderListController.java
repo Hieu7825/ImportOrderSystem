@@ -86,8 +86,11 @@ public class WM_OrderListController implements Initializable {
     }
 
     private void loadData() {
-        List<SiteOrder> all = siteOrderService.getAll();
-        pagination.setItems(all);
+        // WM không xem các đơn đã bị HỦY (CANCELLED)
+        List<SiteOrder> visible = siteOrderService.getAll().stream()
+            .filter(so -> !"CANCELLED".equals(so.getStatus()))
+            .collect(java.util.stream.Collectors.toList());
+        pagination.setItems(visible);
     }
 
     // ── Pagination ────────────────────────────────────────────────────────────

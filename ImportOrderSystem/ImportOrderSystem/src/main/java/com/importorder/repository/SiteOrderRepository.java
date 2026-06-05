@@ -60,11 +60,14 @@ public class SiteOrderRepository {
         return list;
     }
 
-    /** WM: đơn chờ kiểm hàng — SENT hoặc PARTIALLY_RECEIVED, KHÔNG bao gồm CANCELLED */
+    /**
+     * WM: đơn chờ kiểm hàng — SENT, CONFIRMED (site đã xác nhận / hàng đã về)
+     * hoặc PARTIALLY_RECEIVED. KHÔNG bao gồm CANCELLED / RECEIVED.
+     */
     public List<SiteOrder> findPendingInspection() {
         List<SiteOrder> list = new ArrayList<>();
         for (Document doc : collection.find(
-                Filters.in("status", "SENT", "PARTIALLY_RECEIVED")))
+                Filters.in("status", "SENT", "CONFIRMED", "PARTIALLY_RECEIVED")))
             list.add(toSiteOrder(doc));
         return list;
     }
