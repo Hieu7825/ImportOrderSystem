@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.site.Site_InvitationController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="🤝  Lời mời liên doanh" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <Button text="ℹ  Thông tin site" styleClass="nav-item" maxWidth="Infinity" onAction="#goProfile"/>
+            <Button text="📋  Mặt hàng KD" styleClass="nav-item" maxWidth="Infinity" onAction="#goCatalog"/>
+            <Button text="📦  Tồn kho" styleClass="nav-item" maxWidth="Infinity" onAction="#goStock"/>
+            <Button text="🛒  Đơn hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrders"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label fx:id="lblSiteCode" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="24" style="-fx-padding: 32;" maxWidth="680">
+
+            <Label text="Lời mời liên doanh"
+                   style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+
+            <!-- Không có lời mời -->
+            <Label fx:id="lblNoInvite"
+                   text="✅ Không có lời mời liên doanh nào đang chờ phản hồi."
+                   style="-fx-text-fill: #22C55E; -fx-font-size: 14px;"
+                   visible="false" managed="false"/>
+
+            <!-- Form chấp nhận lời mời -->
+            <VBox fx:id="vboxForm" spacing="20" visible="false" managed="false">
+
+                <!-- Thông tin lời mời -->
+                <VBox styleClass="stat-card" spacing="16">
+                    <Label text="Thông tin lời mời từ hệ thống"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                    <HBox spacing="32">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="MÃ SITE" styleClass="form-label"/>
+                            <Label fx:id="lblInviteSiteCode"
+                                   style="-fx-text-fill: #4F6EF7; -fx-font-size: 16px; -fx-font-weight: 700;"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="TÊN SITE" styleClass="form-label"/>
+                            <Label fx:id="lblSiteName"
+                                   style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        </VBox>
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="QUỐC GIA" styleClass="form-label"/>
+                            <Label fx:id="lblCountry"
+                                   style="-fx-text-fill: #E8ECF5; -fx-font-size: 13px;"/>
+                        </VBox>
+                    </HBox>
+                    <Label fx:id="lblInvitedBy"
+                           style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                </VBox>
+
+                <!-- Form điền thông tin -->
+                <VBox styleClass="stat-card" spacing="20">
+                    <Label text="Điền thông tin vận chuyển của site bạn"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+
+                    <Label text="* Bạn có thể cập nhật thêm thông tin sau khi chấp nhận."
+                           style="-fx-text-fill: #4A5368; -fx-font-size: 11px;"/>
+
+                    <HBox spacing="16">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="SỐ NGÀY VẬN CHUYỂN BẰNG TÀU *" styleClass="form-label"/>
+                            <TextField fx:id="txtShipDays" promptText="VD: 14"
+                                       styleClass="text-field"/>
+                            <Label fx:id="lblShipErr" styleClass="form-error"
+                                   visible="false" managed="false"/>
+                        </VBox>
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="SỐ NGÀY VẬN CHUYỂN HÀNG KHÔNG *" styleClass="form-label"/>
+                            <TextField fx:id="txtAirDays" promptText="VD: 3"
+                                       styleClass="text-field"/>
+                            <Label fx:id="lblAirErr" styleClass="form-error"
+                                   visible="false" managed="false"/>
+                        </VBox>
+                    </HBox>
+
+                    <VBox spacing="6">
+                        <Label text="EMAIL LIÊN HỆ" styleClass="form-label"/>
+                        <TextField fx:id="txtEmail" promptText="email@site.com"
+                                   styleClass="text-field"/>
+                    </VBox>
+
+                    <VBox spacing="6">
+                        <Label text="THÔNG TIN KHÁC" styleClass="form-label"/>
+                        <TextArea fx:id="txtOtherInfo" styleClass="text-field"
+                                  promptText="Ghi chú thêm về site..." prefHeight="80"
+                                  wrapText="true"/>
+                    </VBox>
+
+                    <Label fx:id="lblError" styleClass="form-error" wrapText="true"
+                           visible="false" managed="false"
+                           style="-fx-background-color: rgba(239,68,68,0.1);
+                                  -fx-background-radius: 6px; -fx-padding: 8 12;"/>
+
+                    <HBox spacing="12" alignment="CENTER_RIGHT">
+                        <Button text="✕ Từ chối lời mời" styleClass="btn-danger"
+                                onAction="#handleReject"/>
+                        <Button text="✓ Chấp nhận &amp; Liên doanh"
+                                styleClass="btn-primary" onAction="#handleAccept"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

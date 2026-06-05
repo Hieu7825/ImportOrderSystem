@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.controller.ood.OOD_SiteOrderListController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: 
+#0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: 
+#252A3A;"/>
+            <Button text="⬛  Tổng quan" styleClass="nav-item" maxWidth="Infinity" onAction="#goDashboard"/>
+            <Button text="📋  Yêu cầu nhập hàng" styleClass="nav-item" maxWidth="Infinity" onAction="#goOrderRequests"/>
+            <Button text="📦  Đơn hàng" styleClass="nav-item, nav-item-active" maxWidth="Infinity"/>
+            <Button text="⚠  Yêu cầu hủy" styleClass="nav-item" maxWidth="Infinity" onAction="#goCancelRequests"/>
+            <Button text="🏭  Quản lý Site" styleClass="nav-item" maxWidth="Infinity" onAction="#goSites"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Separator style="-fx-background-color: 
+#252A3A;"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ĐẶT HÀNG QUỐC TẾ" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+            <Label text="Danh sách đơn hàng"
+                   style="-fx-text-fill: 
+#E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+            <TableView fx:id="tblOrders" styleClass="table-view" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colSiteOrderId" text="MÃ ĐƠN" prefWidth="220"/>
+                    <TableColumn fx:id="colBatchId" text="BATCH" prefWidth="180"/>
+                    <TableColumn fx:id="colSite" text="SITE" prefWidth="100"/>
+                    <TableColumn fx:id="colMeans" text="VẬN CHUYỂN" prefWidth="120"/>
+                    <TableColumn fx:id="colArrival" text="DỰ KIẾN VỀ" prefWidth="130"/>
+                    <TableColumn fx:id="colStatus" text="TRẠNG THÁI" prefWidth="140"/>
+                    <TableColumn fx:id="colActions" text="THAO TÁC" prefWidth="160"/>
+                </columns>
+                <placeholder>
+                    <Label text="Chưa có đơn hàng nào" style="-fx-text-fill: 
+#4A5368;"/>
+                </placeholder>
+            </TableView>
+             <!-- Thêm sau TableView -->
+            <HBox alignment="CENTER" spacing="12" style="-fx-padding: 8 0 0 0;">
+                <Button text="◀ Trang trước" styleClass="btn-ghost" onAction="#handlePrevPage"/>
+                <Label fx:id="lblPageInfo"
+                       style="-fx-text-fill: 
+#8892A8; -fx-font-size: 12px;"/>
+                <Button text="Trang sau ▶" styleClass="btn-ghost" onAction="#handleNextPage"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

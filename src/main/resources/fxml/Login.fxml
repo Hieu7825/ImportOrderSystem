@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.importorder.controller.LoginController"
+           stylesheets="@../css/global.css"
+           style="-fx-background-color: #0D0F14;">
+
+    <VBox alignment="CENTER" spacing="0" maxWidth="420">
+
+        <!-- Card -->
+        <VBox spacing="24"
+              style="-fx-background-color: #13161E;
+                     -fx-border-color: #252A3A;
+                     -fx-border-radius: 16px;
+                     -fx-background-radius: 16px;
+                     -fx-padding: 40;">
+
+            <!-- Logo + Title -->
+            <VBox spacing="8" alignment="CENTER">
+                <Label text="📦" style="-fx-font-size: 40px;"/>
+                <Label text="Import Order System"
+                       style="-fx-text-fill: #E8ECF5; -fx-font-size: 22px; -fx-font-weight: 700;"/>
+                <Label text="Vui lòng đăng nhập để tiếp tục"
+                       style="-fx-text-fill: #8892A8; -fx-font-size: 13px;"/>
+            </VBox>
+
+            <!-- Form -->
+            <VBox spacing="16">
+                <!-- Username -->
+                <VBox spacing="6">
+                    <Label text="USERNAME" styleClass="form-label"/>
+                    <TextField fx:id="txtUsername"
+                               promptText="Nhập username..."
+                               styleClass="text-field"/>
+                    <Label fx:id="lblUsernameError" styleClass="form-error" visible="false"
+                           managed="false"/>
+                </VBox>
+
+                <!-- Password -->
+                <VBox spacing="6">
+                    <Label text="MẬT KHẨU" styleClass="form-label"/>
+                    <PasswordField fx:id="txtPassword"
+                                  promptText="Nhập mật khẩu..."
+                                  styleClass="text-field"/>
+                    <Label fx:id="lblPasswordError" styleClass="form-error" visible="false"
+                           managed="false"/>
+                </VBox>
+
+                <!-- Error chung -->
+                <Label fx:id="lblError"
+                       style="-fx-text-fill: #EF4444; -fx-font-size: 12px;
+                              -fx-background-color: rgba(239,68,68,0.1);
+                              -fx-background-radius: 6px; -fx-padding: 8 12;"
+                       visible="false" managed="false" wrapText="true"/>
+
+                <!-- Button -->
+                <Button fx:id="btnLogin" text="Đăng nhập"
+                        styleClass="btn-primary"
+                        maxWidth="Infinity"
+                        onAction="#handleLogin"
+                        defaultButton="true"/>
+            </VBox>
+
+        </VBox>
+
+        <!-- Footer -->
+        <Label text="© 2025 Import Order Management System"
+               style="-fx-text-fill: #4A5368; -fx-font-size: 11px; -fx-padding: 16 0 0 0;"/>
+
+    </VBox>
+</StackPane>

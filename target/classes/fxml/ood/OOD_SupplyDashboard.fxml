@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.importorder.uc4_create_request.OOD_SupplyDashboardController"
+            stylesheets="@../../css/global.css"
+            style="-fx-background-color: #0D0F14;">
+    <left>
+        <VBox styleClass="sidebar" spacing="4" style="-fx-padding: 20 12;">
+            <Label text="📦 Import Order" styleClass="sidebar-logo"/>
+            <Separator style="-fx-background-color: #252A3A;"/>
+            <Button text="← Quay lại" styleClass="nav-item" maxWidth="Infinity" onAction="#goBack"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Label fx:id="lblUserName" styleClass="sidebar-user-name"/>
+            <Label text="ĐẶT HÀNG QUỐC TẾ" styleClass="sidebar-user-role"/>
+            <Button text="Đăng xuất" styleClass="btn-logout" maxWidth="Infinity" onAction="#handleLogout"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="20" style="-fx-padding: 32;">
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Button text="← Quay lại" styleClass="btn-ghost" onAction="#goBack"/>
+                <VBox HBox.hgrow="ALWAYS" spacing="4">
+                    <Label text="Tra cứu tồn kho"
+                           style="-fx-text-fill: #E8ECF5; -fx-font-size: 20px; -fx-font-weight: 700;"/>
+                    <Label fx:id="lblBatchId"
+                           style="-fx-text-fill: #8892A8; -fx-font-size: 12px;"/>
+                    <!-- Sub-batch info (chỉ hiện khi là replacement) -->
+                    <Label fx:id="lblSubBatchInfo"
+                           style="-fx-text-fill: #F59E0B; -fx-font-size: 12px; -fx-font-weight: 600;"
+                           visible="false" managed="false"/>
+                </VBox>
+                <Button fx:id="btnCalculate" text="⚡ Tính phương án →"
+                        styleClass="btn-primary" onAction="#handleCalculate" disable="true"/>
+            </HBox>
+
+            <!-- Edge Case B1: cảnh báo không có tồn kho -->
+            <Label fx:id="lblNoStockWarning"
+                   style="-fx-text-fill: #EF4444; -fx-font-size: 13px;
+                          -fx-background-color: rgba(239,68,68,0.08);
+                          -fx-background-radius: 8px; -fx-padding: 10 14;"
+                   wrapText="true" visible="false" managed="false"/>
+
+            <!-- Summary cards + Site filter -->
+            <HBox spacing="12">
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="4">
+                    <Label text="Mặt hàng" styleClass="stat-card-label"/>
+                    <Label fx:id="lblTotalItems" text="0" styleClass="stat-card-value"
+                           style="-fx-font-size: 20px;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="4">
+                    <Label text="Site khả dụng" styleClass="stat-card-label"/>
+                    <Label fx:id="lblTotalSites" text="0" styleClass="stat-card-value"
+                           style="-fx-font-size: 20px; -fx-text-fill: #22C55E;"/>
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="4">
+                    <Label text="Thiếu hàng ⚠" styleClass="stat-card-label"/>
+                    <Label fx:id="lblShortage" text="0" styleClass="stat-card-value"
+                           style="-fx-font-size: 20px; -fx-text-fill: #EF4444;"/>
+                </VBox>
+                <!-- Site filter panel -->
+                <VBox styleClass="stat-card" spacing="12" HBox.hgrow="ALWAYS">
+                    <Label text="Lọc site"
+                           style="-fx-text-fill: #8ECDF5; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                    <Label text="Click: bình thường → ★ ưu tiên → ✕ Tránh → bình thường"
+                           style="-fx-text-fill: #4A5368; -fx-font-size: 11px;"/>
+                    <FlowPane fx:id="flowSiteFilter" hgap="8" vgap="8"/>
+                </VBox>
+            </HBox>
+
+            <!-- Matrix table -->
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                        style="-fx-background-color: transparent; -fx-border-color: #252A3A;
+                               -fx-border-radius: 10px;">
+                <TableView fx:id="tblMatrix" styleClass="table-view" minHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colItem"      text="MẶT HÀNG"  prefWidth="140"/>
+                        <TableColumn fx:id="colNeed"      text="CẦN"        prefWidth="70"/>
+                        <TableColumn fx:id="colTotal"     text="TỔNG TỒN"  prefWidth="90"/>
+                        <TableColumn fx:id="colSiteCount" text="#SITE"      prefWidth="60"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="Đang tải dữ liệu tồn kho..."
+                               style="-fx-text-fill: #4A5368;"/>
+                    </placeholder>
+                </TableView>
+            </ScrollPane>
+
+        </VBox>
+    </center>
+</BorderPane>
